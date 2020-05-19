@@ -45,20 +45,19 @@ Function Install-Ewr
         )
         $LocalFiles = @()
         @([System.IO.Directory]::GetFiles("$($pwd.Path)", "*.*", [System.IO.SearchOption]::AllDirectories)).Where( { [System.IO.FileInfo]::new($_).Extension -in (".dll", ".cs", ".gif", ".pdb", ".ps1", ".dll", ".md", ".xml") }).ForEach( {
-                $LocalFiles += $_ -replace "$([System.Text.RegularExpressions.Regex]::Escape("$($PWD.Path)"))\\", '' -replace "\\", '/'
-            })
+            $LocalFiles += $_ -replace "$([System.Text.RegularExpressions.Regex]::Escape("$($PWD.Path)"))\\", '' -replace "\\", '/'
+        })
         $STARTPATH = "$($PWD.Path)"
         if ($MyInvocation.MyCommand.Path) {
-            $CDIR = "$([System.IO.FileInfo]::New($MyInvocation.MyCommand.Path).Directory.FullName)"
+            $GLOBAL:CDIR = "$([System.IO.FileInfo]::New($MyInvocation.MyCommand.Path).Directory.FullName)"
             cd $CDIR
         }
         else {
-            $CDIR = "$($PWD.Path)"
+            $GLOBAL:CDIR = "$($PWD.Path)"
         }
         if (!$PWD.Path.Contains("Execute-WebRequest")) {
             write-host "This script is not in the correct folder!" -ForegroundColor Red
-        }
-        else {
+        } else {
             while (Compare-Object $ReposFiles $LocalFiles) {
                 if ($PWD.Path -ne $CDIR) { cd $CDIR }
                 if ($MyInvocation.MyCommand.Path) {
