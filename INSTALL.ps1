@@ -1,121 +1,122 @@
+Function Start-IE {
+    Param()
+    while (!$test) {
+        try {
+            $test = iwr google.com -ea 0 -Method Head
+        }
+        catch [System.NotSupportedException] {
+            if (!$ans) {
+                $ans = [Microsoft.VisualBasic.Interaction]::MsgBox(
+                    "You will need to open Internet Explorer and complete the 'first run' wizard.",
+                    [Microsoft.VisualBasic.MsgBoxStyle]::OkOnly,
+                    "Execute Web Request"
+                )
+            }
+            if (!$iexplore) {
+                . "C:\program files\internet Explorer\iexplore.exe"
+                while ((get-process iexplore -ea 0)) {
+                    sleep -m 200
+                }
+                $iexplore = $true
+            }
+        }
+    }
+}
+function Check-Env {
+    $ReposFiles = @(. "C:\Program Files\Git\bin\git.exe" ls-files).Where( { $_ -ne 'LICENSE' })
+    $LocalFiles = @()
+    @([System.IO.Directory]::GetFiles("$($pwd.Path)", "*.*", [System.IO.SearchOption]::AllDirectories)).Where( { [System.IO.FileInfo]::new($_).Extension -in (".dll", ".cs", ".gif", ".pdb", ".ps1", ".dll", ".md", ".xml") }).ForEach( {
+        $LocalFiles += $_ -replace "$([System.Text.RegularExpressions.Regex]::Escape("$($PWD.Path)"))\\", '' -replace "\\", '/'
+    })
+    $STARTPATH = "$($PWD.Path)"
+    if ($MyInvocation.MyCommand.Path) {
+        $GLOBAL:CDIR = "$([System.IO.FileInfo]::New($MyInvocation.MyCommand.Path).Directory.FullName)"
+        cd $CDIR
+    }
+    else {
+        $GLOBAL:CDIR = "$($PWD.Path)"
+    }
+    if (!$PWD.Path.Contains("Execute-WebRequest")) {
+        write-host "This script is not in the correct folder!" -ForegroundColor Red
+    } else {
+        while (Compare-Object $ReposFiles $LocalFiles) {
+            if ($PWD.Path -ne $CDIR) { cd $CDIR }
+            if ($MyInvocation.MyCommand.Path) {
+                write-host "INSTALL.ps1" -ForegroundColor blue -nonewline
+                write-host " was launched locally. To update the local repository, this file must not be in use." -foregroundcolor green
+                write-host "Launch new process?" -foregroundcolor yellow -NoNewLine
+                Write-host "(y/n): " -ForeGroundColor White -NoNewLine
+                $ans = Read-Host
+                if ($ans -eq 'y') {
+                    $null = ([System.Diagnostics.Process]@{
+                            StartInfo = [System.Diagnostics.ProcessStartInfo]@{
+                                FileName  = "$($PSHOME)\PowerShell.exe";
+                                Arguments = " -ep RemoteSigned -noprofile -nologo -c cd '$($CDIR)'; iex (irm 'https://raw.githubusercontent.com/nstevens1040/Execute-WebRequest/master/INSTALL.ps1'); Install-Ewr"
+                            };
+                        }).Start()
+                    (Get-Process -Id $PID).kill()
+                }
+            }
+            else {
+                write-host "Local repository is out of date!`n" -ForegroundColor Red
+                write-host "In order for this solution to work correctly, the local repository must be up to date.`n" -ForegroundColor Yellow
+                Write-Host "Delete the contents of:`n" -ForegroundColor Yellow
+                Write-Host "`t$($CDIR)`n" -ForegroundColor Green
+                write-host "and reset the local repo for: " -ForeGroundColor Yellow -NoNewLine
+                write-host "Execute-WebRequest" -ForeGroundColor Blue -NoNewLine
+                Write-host " ?" -foregroundcolor yellow -NoNewLine
+                Write-host " (y/n)" -ForegroundColor White -NoNewline
+                $ans = read-host
+                if ($ans -eq 'y') {
+                    gci -Recurse | Remove-Item -Recurse -Force
+                    . "C:\Program Files\Git\bin\git.exe" reset --hard origin/master
+                    $ReposFiles = @(. "C:\Program Files\Git\bin\git.exe" ls-files).Where( { $_ -ne 'LICENSE' })
+                    $LocalFiles = @()
+                    @([System.IO.Directory]::GetFiles("$($pwd.Path)", "*.*", [System.IO.SearchOption]::AllDirectories)).Where( { [System.IO.FileInfo]::new($_).Extension -in (".dll", ".cs", ".gif", ".pdb", ".ps1", ".dll", ".md", ".xml") }).ForEach( {
+                        $LocalFiles += $_ -replace "$([System.Text.RegularExpressions.Regex]::Escape("$($PWD.Path)"))\\", '' -replace "\\", '/'
+                    })
+                }
+            }
+            sleep -s 1
+        }
+    }
+}
+function AddAllAssemblies {
+    param()
+    @([System.IO.Directory]::GetFiles("$([System.Environment]::GetEnvironmentVariable("EXWEBREQ","MACHINE"))\Assemblies", "*.dll", [System.IO.SearchOption]::AllDirectories)).ForEach( { Add-Type -Path $_ })
+}
+Function SeletCustomFolder {
+    Add-Type -AssemblyName System.Windows.Forms
+    $PICKER = [System.Windows.Forms.FolderBrowserDialog]::new()
+    $PICKER.RootFolder = "Desktop"
+    $PICKER.ShowNewFolderButton = $true
+    $null = $PICKER.ShowDialog()
+    return "$($PICKER.SelectedPath)"
+}
+Function SetEnvVarFolder {
+    Param(
+        [string]$FOLDER,
+        [string]$VARIABLE_NAME
+    )
+    if (![System.IO.Directory]::Exists($FOLDER)) { $null = [System.IO.Directory]::CreateDirectory($FOLDER) }
+    $null = ([System.Diagnostics.Process]@{
+        StartInfo = [System.Diagnostics.ProcessStartInfo]@{
+            FileName    = "$($PSHOME)\PowerShell.exe";
+            Arguments   = " -WindowStyle Hidden -noprofile -nologo -ep RemoteSigned -c [System.Environment]::SetEnvironmentVariable('$($VARIABLE_NAME)','$($FOLDER)','MACHINE')";
+            Verb        = "RunAs";
+            WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Hidden;
+        }
+    }).Start()
+}
+
 Function Install-Ewr 
 {
     [cmdletbinding()]
     Param()
-    Function Start-IE {
-        Param()
-        while (!$test) {
-            try {
-                $test = iwr google.com -ea 0 -Method Head
-            }
-            catch [System.NotSupportedException] {
-                if (!$ans) {
-                    $ans = [Microsoft.VisualBasic.Interaction]::MsgBox(
-                        "You will need to open Internet Explorer and complete the 'first run' wizard.",
-                        [Microsoft.VisualBasic.MsgBoxStyle]::OkOnly,
-                        "Execute Web Request"
-                    )
-                }
-                if (!$iexplore) {
-                    . "C:\program files\internet Explorer\iexplore.exe"
-                    while ((get-process iexplore -ea 0)) {
-                        sleep -m 200
-                    }
-                    $iexplore = $true
-                }
-            }
-        }
-    }
-    function Check-Env {
-        $ReposFiles = @(. "C:\Program Files\Git\bin\git.exe" ls-files).Where( { $_ -ne 'LICENSE' })
-        $LocalFiles = @()
-        @([System.IO.Directory]::GetFiles("$($pwd.Path)", "*.*", [System.IO.SearchOption]::AllDirectories)).Where( { [System.IO.FileInfo]::new($_).Extension -in (".dll", ".cs", ".gif", ".pdb", ".ps1", ".dll", ".md", ".xml") }).ForEach( {
-            $LocalFiles += $_ -replace "$([System.Text.RegularExpressions.Regex]::Escape("$($PWD.Path)"))\\", '' -replace "\\", '/'
-        })
-        $STARTPATH = "$($PWD.Path)"
-        if ($MyInvocation.MyCommand.Path) {
-            $GLOBAL:CDIR = "$([System.IO.FileInfo]::New($MyInvocation.MyCommand.Path).Directory.FullName)"
-            cd $CDIR
-        }
-        else {
-            $GLOBAL:CDIR = "$($PWD.Path)"
-        }
-        if (!$PWD.Path.Contains("Execute-WebRequest")) {
-            write-host "This script is not in the correct folder!" -ForegroundColor Red
-        } else {
-            while (Compare-Object $ReposFiles $LocalFiles) {
-                if ($PWD.Path -ne $CDIR) { cd $CDIR }
-                if ($MyInvocation.MyCommand.Path) {
-                    write-host "INSTALL.ps1" -ForegroundColor blue -nonewline
-                    write-host " was launched locally. To update the local repository, this file must not be in use." -foregroundcolor green
-                    write-host "Launch new process?" -foregroundcolor yellow -NoNewLine
-                    Write-host "(y/n): " -ForeGroundColor White -NoNewLine
-                    $ans = Read-Host
-                    if ($ans -eq 'y') {
-                        $null = ([System.Diagnostics.Process]@{
-                                StartInfo = [System.Diagnostics.ProcessStartInfo]@{
-                                    FileName  = "$($PSHOME)\PowerShell.exe";
-                                    Arguments = " -ep RemoteSigned -noprofile -nologo -c cd '$($CDIR)'; iex (irm 'https://raw.githubusercontent.com/nstevens1040/Execute-WebRequest/master/INSTALL.ps1'); Install-Ewr"
-                                };
-                            }).Start()
-                        (Get-Process -Id $PID).kill()
-                    }
-                }
-                else {
-                    write-host "Local repository is out of date!`n" -ForegroundColor Red
-                    write-host "In order for this solution to work correctly, the local repository must be up to date.`n" -ForegroundColor Yellow
-                    Write-Host "Delete the contents of:`n" -ForegroundColor Yellow
-                    Write-Host "`t$($CDIR)`n" -ForegroundColor Green
-                    write-host "and reset the local repo for: " -ForeGroundColor Yellow -NoNewLine
-                    write-host "Execute-WebRequest" -ForeGroundColor Blue -NoNewLine
-                    Write-host " ?" -foregroundcolor yellow -NoNewLine
-                    Write-host " (y/n)" -ForegroundColor White -NoNewline
-                    $ans = read-host
-                    if ($ans -eq 'y') {
-                        gci -Recurse | Remove-Item -Recurse -Force
-                        . "C:\Program Files\Git\bin\git.exe" reset --hard origin/master
-                        $ReposFiles = @(. "C:\Program Files\Git\bin\git.exe" ls-files).Where( { $_ -ne 'LICENSE' })
-                        $LocalFiles = @()
-                        @([System.IO.Directory]::GetFiles("$($pwd.Path)", "*.*", [System.IO.SearchOption]::AllDirectories)).Where( { [System.IO.FileInfo]::new($_).Extension -in (".dll", ".cs", ".gif", ".pdb", ".ps1", ".dll", ".md", ".xml") }).ForEach( {
-                            $LocalFiles += $_ -replace "$([System.Text.RegularExpressions.Regex]::Escape("$($PWD.Path)"))\\", '' -replace "\\", '/'
-                        })
-                    }
-                }
-                sleep -s 1
-            }
-        }
-    }
     if ([System.IO.Directory]::GetFiles("$($PWD.Path)", "Microsoft.VisualBasic.dll", [System.IO.SearchOption]::AllDirectories)) {
         add-type -path "$([System.IO.Directory]::GetFiles("$($PWD.Path)","Microsoft.VisualBasic.dll",[System.IO.SearchOption]::AllDirectories))"
     }
-    function AddAllAssemblies {
-        param()
-        @([System.IO.Directory]::GetFiles("$([System.Environment]::GetEnvironmentVariable("EXWEBREQ","MACHINE"))\Assemblies", "*.dll", [System.IO.SearchOption]::AllDirectories)).ForEach( { Add-Type -Path $_ })
-    }
-    Function SeletCustomFolder {
-        Add-Type -AssemblyName System.Windows.Forms
-        $PICKER = [System.Windows.Forms.FolderBrowserDialog]::new()
-        $PICKER.RootFolder = "Desktop"
-        $PICKER.ShowNewFolderButton = $true
-        $null = $PICKER.ShowDialog()
-        return "$($PICKER.SelectedPath)"
-    }
-    Function SetEnvVarFolder {
-        Param(
-            [string]$FOLDER,
-            [string]$VARIABLE_NAME
-        )
-        if (![System.IO.Directory]::Exists($FOLDER)) { $null = [System.IO.Directory]::CreateDirectory($FOLDER) }
-        $null = ([System.Diagnostics.Process]@{
-                StartInfo = [System.Diagnostics.ProcessStartInfo]@{
-                    FileName    = "$($PSHOME)\PowerShell.exe";
-                    Arguments   = " -WindowStyle Hidden -noprofile -nologo -ep RemoteSigned -c [System.Environment]::SetEnvironmentVariable('$($VARIABLE_NAME)','$($FOLDER)','MACHINE')";
-                    Verb        = "RunAs";
-                    WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Hidden;
-                }
-            }).Start()
-    }
-    $EXWEBREQ = $CDIR
+    $EXWEBREQ = $GLOBAL:CDIR
     if ([System.Environment]::GetEnvironmentVariable("EXWEBREQ", "MACHINE")) {
         Switch (
             [microsoft.visualbasic.Interaction]::MsgBox(
@@ -180,6 +181,7 @@ Function Install-Ewr
 Add-Type -AssemblyName Microsoft.VisualBasic
 Start-IE
 AddAllAssemblies
+Install-Ewr
 function Execute-WebRequest {
     Param(
         [ValidateSet('GET', 'POST', 'HEAD', 'OPTIONS')]
