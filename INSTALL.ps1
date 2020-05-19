@@ -1,3 +1,11 @@
+$STARTPATH = "$($PWD.Path)"
+if ($MyInvocation.MyCommand.Path) {
+    $GLOBAL:CDIR = "$([System.IO.FileInfo]::New($MyInvocation.MyCommand.Path).Directory.FullName)"
+    cd $CDIR
+}
+else {
+    $GLOBAL:CDIR = "$($PWD.Path)"
+}
 Function Start-IE {
     Param()
     while (!$test) {
@@ -28,14 +36,6 @@ function Check-Env {
     @([System.IO.Directory]::GetFiles("$($pwd.Path)", "*.*", [System.IO.SearchOption]::AllDirectories)).Where( { [System.IO.FileInfo]::new($_).Extension -in (".dll", ".cs", ".gif", ".pdb", ".ps1", ".dll", ".md", ".xml") }).ForEach( {
         $LocalFiles += $_ -replace "$([System.Text.RegularExpressions.Regex]::Escape("$($PWD.Path)"))\\", '' -replace "\\", '/'
     })
-    $STARTPATH = "$($PWD.Path)"
-    if ($MyInvocation.MyCommand.Path) {
-        $GLOBAL:CDIR = "$([System.IO.FileInfo]::New($MyInvocation.MyCommand.Path).Directory.FullName)"
-        cd $CDIR
-    }
-    else {
-        $GLOBAL:CDIR = "$($PWD.Path)"
-    }
     if (!$PWD.Path.Contains("Execute-WebRequest")) {
         write-host "This script is not in the correct folder!" -ForegroundColor Red
     } else {
