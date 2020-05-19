@@ -180,8 +180,8 @@ Function Install-Ewr
 }
 Add-Type -AssemblyName Microsoft.VisualBasic
 Start-IE
-AddAllAssemblies
 Install-Ewr
+AddAllAssemblies
 function Execute-WebRequest {
     Param(
         [ValidateSet('GET', 'POST', 'HEAD', 'OPTIONS')]
