@@ -27,22 +27,7 @@ Function Install-Ewr
         }
     }
     function Check-Env {
-        $ReposFiles = @(
-            "Assemblies/CredentialDialog/Credential_Dialog.cs",
-            "Assemblies/CredentialDialog/Credential_Dialog.dll",
-            "Assemblies/CredentialDialog/Credential_Dialog.pdb",
-            "Assemblies/InputDialogPrompt/Input_Dialog_Prompt.dll",
-            "Assemblies/InputDialogPrompt/Input_Dialog_Prompt.pdb",
-            "Assemblies/Microsoft.VisualBasic/v4.0_10.0.0.0__b03f5f7f11d50a3a/Microsoft.VisualBasic.dll",
-            "Assemblies/mshtml/Microsoft.mshtml.dll",
-            "Assemblies/NativeMethods/Native_Methods.cs",
-            "Assemblies/NativeMethods/Native_Methods.dll",
-            "Assemblies/NativeMethods/Native_Methods.pdb",
-            "Assemblies/System/v4.0_4.0.0.0__b77a5c561934e089/System.dll",
-            "Assemblies/System.Net.Http/v4.0_4.0.0.0__b03f5f7f11d50a3a/System.Net.Http.dll",
-            "Assemblies/System.Security.Cryptography.ProtectedData.4.7.0/System.Security.Cryptography.ProtectedData.dll",
-            "Assemblies/System.Security.Cryptography.ProtectedData.4.7.0/System.Security.Cryptography.ProtectedData.xml"
-        )
+        $ReposFiles = @(. "C:\Program Files\Git\bin\git.exe" ls-files).Where( { $_ -ne 'LICENSE' })
         $LocalFiles = @()
         @([System.IO.Directory]::GetFiles("$($pwd.Path)", "*.*", [System.IO.SearchOption]::AllDirectories)).Where( { [System.IO.FileInfo]::new($_).Extension -in (".dll", ".cs", ".gif", ".pdb", ".ps1", ".dll", ".md", ".xml") }).ForEach( {
             $LocalFiles += $_ -replace "$([System.Text.RegularExpressions.Regex]::Escape("$($PWD.Path)"))\\", '' -replace "\\", '/'
@@ -158,8 +143,7 @@ Function Install-Ewr
                 }
             }
         }
-    }
-    else {
+    } else {
         Switch (
             [microsoft.visualbasic.Interaction]::MsgBox(
                 "We'll need to set an environment variable that points to the location of the Execute-WebRequest local repository.`n`nClick 'Yes' to set environment variable:`n`n`t%EXWEBREQ%`nto:`n`t'$($EXWEBREQ)'`n`nClick 'No' to select another folder.",
@@ -192,255 +176,266 @@ Function Install-Ewr
             }
         }
     }
-
-    Add-Type -AssemblyName Microsoft.VisualBasic
-    Start-IE
-    AddAllAssemblies
-    function Execute-WebRequest {
-        Param(
-            [ValidateSet('GET', 'POST', 'HEAD', 'OPTIONS')]
-            [String]$METHOD,
-            [String]$BODY,
-            [string]$ENCRYPTEDBODY,
-            [string]$BEARER,
-            [string]$CSRF,
-            $HEADERS,
-            [String]$URI,
-            $DEFAULTCOOKIES,
-            [switch]$GOOGLEAPI,
-            [string]$CONTENT_TYPE,
-            [string]$REFERER,
-            [switch]$NO_COOKIE,
-            [switch]$GET_REDIRECT_URI,
-            [System.IO.FileStream]$FILE
-        )
-        $STARTED = GET-DATE
-        While ((([DateTime]::Now - $STARTED) | % totalSeconds) -lt 15) {
-            Function Parse-SetCookieHeader {
-                [cmdletbinding()]
-                Param(
-                    [System.Net.Http.Headers.HttpResponseHeaders]$HEADERS
-                )
-                $Collection = [System.Net.CookieCollection]::New()
-                @($HEADERS.GetValues("Set-Cookie")).forEach( {
-                        $cookie = [System.Net.Cookie]::New()
-                        $c = 0
-                        $_.split(';').forEach({
-                            $str = $_ -replace "^\s+", ''
-                            if ($str -match '=') {
-                                $PNAME = $str.split('=')[0]
-                                $VNAME = $str.split('=')[1]
-                                if ($c -eq 0) {
-                                    $cookie.Name = $PNAME
-                                    $cookie.Value = $VNAME
-                                }
-                                if ($PNAME.Contains("Expires")) {
-                                    $cookie.Expires = ([datetime]$VNAME).ToUniversalTime()
-                                }
-                                else {
-                                    if ($PNAME -in @($cookie | gm -memberType Property | % Name)) {
-                                        Switch ($PNAME) {
-                                            "Path" {
-                                                $cookie.Path = $VNAME
-                                            }
-                                            "Domain" {
-                                                $cookie.Domain = $VNAME
-                                            }
+}
+Add-Type -AssemblyName Microsoft.VisualBasic
+Start-IE
+AddAllAssemblies
+function Execute-WebRequest {
+    Param(
+        [ValidateSet('GET', 'POST', 'HEAD', 'OPTIONS')]
+        [String]$METHOD,
+        [String]$BODY,
+        [string]$ENCRYPTEDBODY,
+        [string]$BEARER,
+        [string]$CSRF,
+        $HEADERS,
+        [String]$URI,
+        $DEFAULTCOOKIES,
+        [switch]$GOOGLEAPI,
+        [string]$CONTENT_TYPE,
+        [string]$REFERER,
+        [switch]$NO_COOKIE,
+        [switch]$GET_REDIRECT_URI,
+        [System.IO.FileStream]$FILE
+    )
+    $STARTED = GET-DATE
+    While ((([DateTime]::Now - $STARTED) | % totalSeconds) -lt 15) {
+        Function Parse-SetCookieHeader {
+            [cmdletbinding()]
+            Param(
+                [System.Net.Http.Headers.HttpResponseHeaders]$HEADERS
+            )
+            $Collection = [System.Net.CookieCollection]::New()
+            @($HEADERS.GetValues("Set-Cookie")).forEach( {
+                    $cookie = [System.Net.Cookie]::New()
+                    $c = 0
+                    $_.split(';').forEach({
+                        $str = $_ -replace "^\s+", ''
+                        if ($str -match '=') {
+                            $PNAME = $str.split('=')[0]
+                            $VNAME = $str.split('=')[1]
+                            if ($c -eq 0) {
+                                $cookie.Name = $PNAME
+                                $cookie.Value = $VNAME
+                            }
+                            if ($PNAME.Contains("Expires")) {
+                                $cookie.Expires = ([datetime]$VNAME).ToUniversalTime()
+                            }
+                            else {
+                                if ($PNAME -in @($cookie | gm -memberType Property | % Name)) {
+                                    Switch ($PNAME) {
+                                        "Path" {
+                                            $cookie.Path = $VNAME
+                                        }
+                                        "Domain" {
+                                            $cookie.Domain = $VNAME
                                         }
                                     }
                                 }
                             }
-                            $c++
-                        })
-                    $collection.Add($cookie)
-                })
-                return $collection
-            }
-            if ($ENCRYPTEDBODY) {
-                $BODY = [System.Text.Encoding]::Unicode.GetString(
-                    [System.Security.Cryptography.ProtectedData]::Unprotect(
-                        [System.convert]::FromBase64String($ENCRYPTEDBODY),
-                        $null,
-                        [System.Security.Cryptography.DataProtectionScope]::LocalMachine
-                    )
+                        }
+                        $c++
+                    })
+                $collection.Add($cookie)
+            })
+            return $collection
+        }
+        if ($ENCRYPTEDBODY) {
+            $BODY = [System.Text.Encoding]::Unicode.GetString(
+                [System.Security.Cryptography.ProtectedData]::Unprotect(
+                    [System.convert]::FromBase64String($ENCRYPTEDBODY),
+                    $null,
+                    [System.Security.Cryptography.DataProtectionScope]::LocalMachine
                 )
-            }
-            if ($CSRF) {
-                $CSRF = [System.Text.Encoding]::Unicode.GetString(
-                    [System.Security.Cryptography.ProtectedData]::Unprotect(
-                        [System.convert]::FromBase64String($CSRF),
-                        $null,
-                        [System.Security.Cryptography.DataProtectionScope]::LocalMachine
-                    )
+            )
+        }
+        if ($CSRF) {
+            $CSRF = [System.Text.Encoding]::Unicode.GetString(
+                [System.Security.Cryptography.ProtectedData]::Unprotect(
+                    [System.convert]::FromBase64String($CSRF),
+                    $null,
+                    [System.Security.Cryptography.DataProtectionScope]::LocalMachine
                 )
-            }
-            if ($BEARER) {
-                $BEARER_TOKEN = [System.Text.Encoding]::Unicode.GetString(
-                    [System.Security.Cryptography.ProtectedData]::Unprotect(
-                        [System.convert]::FromBase64String($BEARER),
-                        $null,
-                        [System.Security.Cryptography.DataProtectionScope]::LocalMachine
-                    )
+            )
+        }
+        if ($BEARER) {
+            $BEARER_TOKEN = [System.Text.Encoding]::Unicode.GetString(
+                [System.Security.Cryptography.ProtectedData]::Unprotect(
+                    [System.convert]::FromBase64String($BEARER),
+                    $null,
+                    [System.Security.Cryptography.DataProtectionScope]::LocalMachine
                 )
-            }
+            )
+        }
+        try {
+            $TESTURI = [Uri]::New($URI)
+        }
+        catch {
+            $TESTURI = $false
+        }
+        if (!$URI.StartsWith("http")) {
+            $URI = "https://$($URI)"
             try {
                 $TESTURI = [Uri]::New($URI)
             }
             catch {
                 $TESTURI = $false
             }
-            if (!$URI.StartsWith("http")) {
-                $URI = "https://$($URI)"
+        }
+        if (!$TESTURI) {
+            Write-Host "Malformed Uri: " -foregroundcolor green -nonewline
+            Write-Host $URI -foregroundcolor blue 
+            Write-host "Please provide another Uri or strike " -foregroundcolor green -nonewline
+            write-host 'enter' -foregroundcolor blue -nonewline
+            write-host " to cancel" -foregroundcolor green
+            $ANS = read-host
+            if (!$ANS) {
+                break;
+            }
+            else {
+                $URI = $ANS
                 try {
                     $TESTURI = [Uri]::New($URI)
                 }
                 catch {
                     $TESTURI = $false
                 }
-            }
-            if (!$TESTURI) {
-                Write-Host "Malformed Uri: " -foregroundcolor green -nonewline
-                Write-Host $URI -foregroundcolor blue 
-                Write-host "Please provide another Uri or strike " -foregroundcolor green -nonewline
-                write-host 'enter' -foregroundcolor blue -nonewline
-                write-host " to cancel" -foregroundcolor green
-                $ANS = read-host
-                if (!$ANS) {
-                    break;
-                }
-                else {
-                    $URI = $ANS
+                if (!$URI.StartsWith("http")) {
+                    $URI = "https://$($URI)"
                     try {
                         $TESTURI = [Uri]::New($URI)
                     }
                     catch {
                         $TESTURI = $false
                     }
-                    if (!$URI.StartsWith("http")) {
-                        $URI = "https://$($URI)"
-                        try {
-                            $TESTURI = [Uri]::New($URI)
-                        }
-                        catch {
-                            $TESTURI = $false
-                        }
-                    }
                 }
             }
-            if (!$TESTURI) {
-                write-host "NOPE" -foregroundColor Red
-                break;
+        }
+        if (!$TESTURI) {
+            write-host "NOPE" -foregroundColor Red
+            break;
+        }
+        $URI = $TESTURI.AbsoluteUri
+        Write-Host "HTTP $($METHOD): " -ForegroundColor Yellow -NoNewline
+        Write-Host "$($TESTURI.Host) :: " -ForegroundColor Green -NoNewline
+        Write-Host "$($TESTURI.PathAndQuery) HTTP/1.1" -ForegroundColor Green
+        $HANDLE = [System.Net.Http.HttpClientHandler]::new()
+        $HANDLE.AutomaticDecompression = [System.Net.DecompressionMethods]::GZip, [System.Net.DecompressionMethods]::Deflate
+        $HANDLE.SslProtocols = (
+            [System.Security.Authentication.SslProtocols]::Tls,
+            [System.Security.Authentication.SslProtocols]::Tls11,
+            [System.Security.Authentication.SslProtocols]::Tls12
+        )
+        $HANDLE.UseProxy = $false
+        $HANDLE.AllowAutoRedirect = $true
+        $HANDLE.MaxAutomaticRedirections = 500
+        $COOKIE = [System.Net.CookieContainer]::new()
+        if ($DEFAULTCOOKIES) {
+            if ($DEFAULTCOOKIES.GETTYPE() -eq [System.Net.CookieCollection]) {
+                $DEFAULTCOOKIES.ForEach({
+                    $COOKIE.Add($_)
+                })
             }
-            $URI = $TESTURI.AbsoluteUri
-            Write-Host "HTTP $($METHOD): " -ForegroundColor Yellow -NoNewline
-            Write-Host "$($TESTURI.Host) :: " -ForegroundColor Green -NoNewline
-            Write-Host "$($TESTURI.PathAndQuery) HTTP/1.1" -ForegroundColor Green
-            $HANDLE = [System.Net.Http.HttpClientHandler]::new()
-            $HANDLE.AutomaticDecompression = [System.Net.DecompressionMethods]::GZip, [System.Net.DecompressionMethods]::Deflate
-            $HANDLE.SslProtocols = (
-                [System.Security.Authentication.SslProtocols]::Tls,
-                [System.Security.Authentication.SslProtocols]::Tls11,
-                [System.Security.Authentication.SslProtocols]::Tls12
-            )
-            $HANDLE.UseProxy = $false
-            $HANDLE.AllowAutoRedirect = $true
-            $HANDLE.MaxAutomaticRedirections = 500
-            $COOKIE = [System.Net.CookieContainer]::new()
-            if ($DEFAULTCOOKIES) {
-                if ($DEFAULTCOOKIES.GETTYPE() -eq [System.Net.CookieCollection]) {
-                    $DEFAULTCOOKIES.ForEach({
-                        $COOKIE.Add($_)
+            if ($DEFAULTCOOKIES.GETTYPE() -eq [System.Collections.hashTable]) {
+                if ($GOOGLEAPI) {
+                    $DEFAULTCOOKIES.Keys.ForEach( {
+                        $cook = [system.net.cookie]@{
+                            Name   = $_;
+                            Value  = $DEFAULTCOOKIES[$_];
+                            Path   = "/";
+                            Domain = ".google.com"
+                        }
+                        $Cookie.Add($cook)
                     })
                 }
-                if ($DEFAULTCOOKIES.GETTYPE() -eq [System.Collections.hashTable]) {
-                    if ($GOOGLEAPI) {
-                        $DEFAULTCOOKIES.Keys.ForEach( {
-                            $cook = [system.net.cookie]@{
-                                Name   = $_;
-                                Value  = $DEFAULTCOOKIES[$_];
-                                Path   = "/";
-                                Domain = ".google.com"
-                            }
-                            $Cookie.Add($cook)
-                        })
-                    }
-                    if (!$GOOGLEAPI) {
-                        $DOMAIN = ".$([URI]::New($URI).Host)"
-                        $DEFAULTCOOKIES.Keys.ForEach( {
-                            $cook = [system.net.cookie]@{
-                                Name   = $_;
-                                Value  = $DEFAULTCOOKIES[$_];
-                                Path   = "/";
-                                Domain = $DOMAIN;
-                            }
-                            $Cookie.Add($cook)
-                        })
-                    }
-                }
-            }
-            $HANDLE.CookieContainer = $COOKIE
-            $CLIENT = [System.Net.Http.HttpClient]::new($HANDLE)
-            if ($BEARER) {
-                $null = $CLIENT.DefaultRequestHeaders.Add("authorization", "Bearer $($BEARER_TOKEN)")
-            }
-            if ($CSRF) {
-                $null = $CLIENT.DefaultRequestHeaders.Add("x-csrf-token", "$($CSRF)")
-            }
-            if ($HEADERS) {
-                if ($HEADERS.gettype() -eq [System.Collections.Specialized.OrderedDictionary]) {
-                    $HEADERS.keys.forEach({
-                        if ($CLIENT.DefaultRequestHeaders.Contains("$($_)")) {
-                            $null = $CLIENT.DefaultRequestHeaders.Remove("$($_)")
+                if (!$GOOGLEAPI) {
+                    $DOMAIN = ".$([URI]::New($URI).Host)"
+                    $DEFAULTCOOKIES.Keys.ForEach( {
+                        $cook = [system.net.cookie]@{
+                            Name   = $_;
+                            Value  = $DEFAULTCOOKIES[$_];
+                            Path   = "/";
+                            Domain = $DOMAIN;
                         }
-                        $null = $CLIENT.DefaultRequestHeaders.Add("$($_)", "$($HEADERS["$($_)"])")
-                    })
-                }
-                if ($HEADERS.gettype() -eq [System.Net.Http.Headers.HttpResponseHeaders]) {
-                    $HEADERS.key.forEach( {
-                        if ($CLIENT.DefaultRequestHeaders.Contains("$($_)")) {
-                            $null = $CLIENT.DefaultRequestHeaders.Remove("$($_)")
-                        }
-                        $null = $CLIENT.DefaultRequestHeaders.Add("$($_)", "$($HEADERS.getValues("$($_)"))")
+                        $Cookie.Add($cook)
                     })
                 }
             }
-            if ($CLIENT.DefaultRequestHeaders.Contains("Path")) {
-                $null = $CLIENT.DefaultRequestHeaders.Remove("Path")
+        }
+        $HANDLE.CookieContainer = $COOKIE
+        $CLIENT = [System.Net.Http.HttpClient]::new($HANDLE)
+        if ($BEARER) {
+            $null = $CLIENT.DefaultRequestHeaders.Add("authorization", "Bearer $($BEARER_TOKEN)")
+        }
+        if ($CSRF) {
+            $null = $CLIENT.DefaultRequestHeaders.Add("x-csrf-token", "$($CSRF)")
+        }
+        if ($HEADERS) {
+            if ($HEADERS.gettype() -eq [System.Collections.Specialized.OrderedDictionary]) {
+                $HEADERS.keys.forEach({
+                    if ($CLIENT.DefaultRequestHeaders.Contains("$($_)")) {
+                        $null = $CLIENT.DefaultRequestHeaders.Remove("$($_)")
+                    }
+                    $null = $CLIENT.DefaultRequestHeaders.Add("$($_)", "$($HEADERS["$($_)"])")
+                })
             }
-            if (!$CLIENT.DefaultRequestHeaders.Contains("User-Agent")) {
-                $null = $CLIENT.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36")
+            if ($HEADERS.gettype() -eq [System.Net.Http.Headers.HttpResponseHeaders]) {
+                $HEADERS.key.forEach( {
+                    if ($CLIENT.DefaultRequestHeaders.Contains("$($_)")) {
+                        $null = $CLIENT.DefaultRequestHeaders.Remove("$($_)")
+                    }
+                    $null = $CLIENT.DefaultRequestHeaders.Add("$($_)", "$($HEADERS.getValues("$($_)"))")
+                })
             }
-            $null = $CLIENT.DefaultRequestHeaders.Add("Path", "/$($URI.Split('/')[3..($URI.Split('/').length)] -join '/')")
-            if ($REFERER) {
-                if ($CLIENT.DefaultRequestHeaders.Contains("Referer")) {
-                    $null = $CLIENT.DefaultRequestHeaders.Remove("Referer")
+        }
+        if ($CLIENT.DefaultRequestHeaders.Contains("Path")) {
+            $null = $CLIENT.DefaultRequestHeaders.Remove("Path")
+        }
+        if (!$CLIENT.DefaultRequestHeaders.Contains("User-Agent")) {
+            $null = $CLIENT.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36")
+        }
+        $null = $CLIENT.DefaultRequestHeaders.Add("Path", "/$($URI.Split('/')[3..($URI.Split('/').length)] -join '/')")
+        if ($REFERER) {
+            if ($CLIENT.DefaultRequestHeaders.Contains("Referer")) {
+                $null = $CLIENT.DefaultRequestHeaders.Remove("Referer")
+            }
+            $null = $CLIENT.DefaultRequestHeaders.Add("Referer", $REFERER)
+        }
+        if ($CONTENT_TYPE) {
+            $CLIENT.DefaultRequestHeaders.Accept.Add([System.Net.Http.Headers.MediaTypeWithQualityHeaderValue]::new("$($CONTENT_TYPE)"))
+        }
+        $OBJ = [psobject]::new()
+        switch ($METHOD) {
+            "GET" {
+                $RES = $CLIENT.GetAsync($URI)
+                if ($RES.Result.Content) {
+                    $S = $RES.Result.Content.ReadAsStringAsync()
+                    $HTMLSTRING = $S.Result
                 }
-                $null = $CLIENT.DefaultRequestHeaders.Add("Referer", $REFERER)
+                $RESHEAD = $RES.Result.Headers
             }
-            if ($CONTENT_TYPE) {
-                $CLIENT.DefaultRequestHeaders.Accept.Add([System.Net.Http.Headers.MediaTypeWithQualityHeaderValue]::new("$($CONTENT_TYPE)"))
-            }
-            $OBJ = [psobject]::new()
-            switch ($METHOD) {
-                "GET" {
-                    $RES = $CLIENT.GetAsync($URI)
+            "POST" {
+                if ($CONTENT_TYPE) {
+                    $RM = [System.Net.Http.HttpRequestMessage]::new([System.Net.Http.HttpMethod]::Post, "$($URI)")
+                    if ($CONTENT_TYPE -eq "application/octet-stream") {
+                        $RM.Content = [System.Net.Http.ByteArrayContent]::New($BODY, 0, $Body.Length)
+                    } else {
+                        $RM.Content = [System.Net.Http.StringContent]::new($BODY, [System.Text.Encoding]::UTF8, "$($CONTENT_TYPE)")
+                    }
+                    if ($FILE) {
+                        $RM.Content = [System.Net.Http.StreamContent]::New($FILE)
+                    }
+                    $RES = $CLIENT.SendAsync($RM)
+                    $RESHEAD = $RES.Result.Headers
                     if ($RES.Result.Content) {
                         $S = $RES.Result.Content.ReadAsStringAsync()
                         $HTMLSTRING = $S.Result
                     }
-                    $RESHEAD = $RES.Result.Headers
                 }
-                "POST" {
-                    if ($CONTENT_TYPE) {
+                if (!$CONTENT_TYPE) {
+                    if (!$BODY) {
                         $RM = [System.Net.Http.HttpRequestMessage]::new([System.Net.Http.HttpMethod]::Post, "$($URI)")
-                        if ($CONTENT_TYPE -eq "application/octet-stream") {
-                            $RM.Content = [System.Net.Http.ByteArrayContent]::New($BODY, 0, $Body.Length)
-                        } else {
-                            $RM.Content = [System.Net.Http.StringContent]::new($BODY, [System.Text.Encoding]::UTF8, "$($CONTENT_TYPE)")
-                        }
-                        if ($FILE) {
-                            $RM.Content = [System.Net.Http.StreamContent]::New($FILE)
-                        }
+                        $RM.Content = [System.Net.Http.StringContent]::new($null, [System.Text.Encoding]::UTF8, "application/x-www-form-urlencoded")
                         $RES = $CLIENT.SendAsync($RM)
                         $RESHEAD = $RES.Result.Headers
                         if ($RES.Result.Content) {
@@ -448,88 +443,76 @@ Function Install-Ewr
                             $HTMLSTRING = $S.Result
                         }
                     }
-                    if (!$CONTENT_TYPE) {
-                        if (!$BODY) {
-                            $RM = [System.Net.Http.HttpRequestMessage]::new([System.Net.Http.HttpMethod]::Post, "$($URI)")
-                            $RM.Content = [System.Net.Http.StringContent]::new($null, [System.Text.Encoding]::UTF8, "application/x-www-form-urlencoded")
-                            $RES = $CLIENT.SendAsync($RM)
-                            $RESHEAD = $RES.Result.Headers
-                            if ($RES.Result.Content) {
-                                $S = $RES.Result.Content.ReadAsStringAsync()
-                                $HTMLSTRING = $S.Result
-                            }
-                        }
-                        if ($BODY) {
-                            $RM = [System.Net.Http.HttpRequestMessage]::new([System.Net.Http.HttpMethod]::Post, "$($URI)")
-                            $RM.Content = [System.Net.Http.StringContent]::new($BODY, [System.Text.Encoding]::UTF8, "application/x-www-form-urlencoded")
-                            $RES = $CLIENT.SendAsync($RM)
-                            $RESHEAD = $RES.Result.Headers
-                            if ($RES.Result.content) {
-                                $S = $RES.Result.Content.ReadAsStringAsync()
-                                $HTMLSTRING = $S.Result
-                            }
+                    if ($BODY) {
+                        $RM = [System.Net.Http.HttpRequestMessage]::new([System.Net.Http.HttpMethod]::Post, "$($URI)")
+                        $RM.Content = [System.Net.Http.StringContent]::new($BODY, [System.Text.Encoding]::UTF8, "application/x-www-form-urlencoded")
+                        $RES = $CLIENT.SendAsync($RM)
+                        $RESHEAD = $RES.Result.Headers
+                        if ($RES.Result.content) {
+                            $S = $RES.Result.Content.ReadAsStringAsync()
+                            $HTMLSTRING = $S.Result
                         }
                     }
                 }
-                "HEAD" {
-                    $RM = [System.Net.Http.HttpRequestMessage]::new([System.Net.Http.HttpMethod]::Head, "$($URI)")
-                    $RES = $CLIENT.SendAsync($RM)
-                    $RESHEAD = $RES.Result.Headers
-                }
             }
-            if (!$NO_COOKIE) {
-                $TO = [DateTime]::Now
-                while (
-                    !$HANDLE.CookieContainer.GetCookies($URI) -or `
-                    (([DateTime]::Now - $TO) | % totalSeconds) -lt 5
-                ) { sleep -m 100 }
+            "HEAD" {
+                $RM = [System.Net.Http.HttpRequestMessage]::new([System.Net.Http.HttpMethod]::Head, "$($URI)")
+                $RES = $CLIENT.SendAsync($RM)
+                $RESHEAD = $RES.Result.Headers
             }
-            $COOKIES = $HANDLE.CookieContainer.GetCookies($URI)
-            if ($RESHEAD) {
-                if ($RESHEAD.Contains("Set-Cookie")) {
-                    @(Parse-SetCookieHeader -HEADERS $RESHEAD).forEach( {
-                        if ($_.Name -notin @($COOKIES.forEach( { $_.Name }))) {
-                            $COOKIES.Add($_)
-                        }
-                    })
-                }
-            }
-            if ($DEFAULTCOOKIES) {
-                @($DEFAULTCOOKIES.WHERE( {
-                    $_.Name -notin @($COOKIES.forEach( { $_.Name }))
-                })).forEach( {
-                    $COOKIES.Add($_)
+        }
+        if (!$NO_COOKIE) {
+            $TO = [DateTime]::Now
+            while (
+                !$HANDLE.CookieContainer.GetCookies($URI) -or `
+                (([DateTime]::Now - $TO) | % totalSeconds) -lt 5
+            ) { sleep -m 100 }
+        }
+        $COOKIES = $HANDLE.CookieContainer.GetCookies($URI)
+        if ($RESHEAD) {
+            if ($RESHEAD.Contains("Set-Cookie")) {
+                @(Parse-SetCookieHeader -HEADERS $RESHEAD).forEach( {
+                    if ($_.Name -notin @($COOKIES.forEach( { $_.Name }))) {
+                        $COOKIES.Add($_)
+                    }
                 })
             }
-            if ($GET_REDIRECT_URI) {
-                $TO = [DateTime]::Now
-                while (
-                    !$RES.Result.RequestMessage.RequestUri.AbsoluteUri -or `
-                    (([DateTime]::Now - $TO) | % totalSeconds) -lt 5
-                ) { sleep -m 100 }
-                $REDIRECT = $RES.Result.RequestMessage.RequestUri.AbsoluteUri
-            }
-            $RESHEAD += $RES.Result.Content.Headers
-            if ($HTMLSTRING) {
-                $DOMOBJ = [System.Activator]::createInstance([TYPE]::getTypeFromCLSID([GUID]::Parse("{25336920-03F9-11cf-8FD0-00AA00686F13}")))
-                if ($DOMOBJ | gm -Name IHTMLDocument2_write) {
-                    $DOMOBJ.IHTMLDocument2_write([System.Text.Encoding]::Unicode.GetBytes($HTMLSTRING))
-                }
-                else {
-                    $DOMOBJ.Write([System.Text.Encoding]::Unicode.GetBytes($HTMLSTRING))
-                }
-            }
-            if ($GET_REDIRECT_URI) {
-                $OBJ | Add-Member -MemberType NoteProperty -Name RedirectUri -Value $REDIRECT
-            }
-            $OBJ | Add-Member -MemberType NoteProperty -Name HttpResponseMessage -Value $RES
-            $OBJ | Add-Member -MemberType NoteProperty -Name CookieCollection -Value $COOKIES
-            $OBJ | Add-Member -MemberType NoteProperty -Name HttpResponseHeaders -Value $RESHEAD
-            if ($HTMLSTRING) {
-                $OBJ | Add-Member -MemberType NoteProperty -Name HtmlDocument -Value $DOMOBJ
-                $OBJ | Add-Member -MemberType NoteProperty -Name ResponseText -Value $HTMLSTRING
-            }
-            return $OBJ
         }
+        if ($DEFAULTCOOKIES) {
+            @($DEFAULTCOOKIES.WHERE( {
+                $_.Name -notin @($COOKIES.forEach( { $_.Name }))
+            })).forEach( {
+                $COOKIES.Add($_)
+            })
+        }
+        if ($GET_REDIRECT_URI) {
+            $TO = [DateTime]::Now
+            while (
+                !$RES.Result.RequestMessage.RequestUri.AbsoluteUri -or `
+                (([DateTime]::Now - $TO) | % totalSeconds) -lt 5
+            ) { sleep -m 100 }
+            $REDIRECT = $RES.Result.RequestMessage.RequestUri.AbsoluteUri
+        }
+        $RESHEAD += $RES.Result.Content.Headers
+        if ($HTMLSTRING) {
+            $DOMOBJ = [System.Activator]::createInstance([TYPE]::getTypeFromCLSID([GUID]::Parse("{25336920-03F9-11cf-8FD0-00AA00686F13}")))
+            if ($DOMOBJ | gm -Name IHTMLDocument2_write) {
+                $DOMOBJ.IHTMLDocument2_write([System.Text.Encoding]::Unicode.GetBytes($HTMLSTRING))
+            }
+            else {
+                $DOMOBJ.Write([System.Text.Encoding]::Unicode.GetBytes($HTMLSTRING))
+            }
+        }
+        if ($GET_REDIRECT_URI) {
+            $OBJ | Add-Member -MemberType NoteProperty -Name RedirectUri -Value $REDIRECT
+        }
+        $OBJ | Add-Member -MemberType NoteProperty -Name HttpResponseMessage -Value $RES
+        $OBJ | Add-Member -MemberType NoteProperty -Name CookieCollection -Value $COOKIES
+        $OBJ | Add-Member -MemberType NoteProperty -Name HttpResponseHeaders -Value $RESHEAD
+        if ($HTMLSTRING) {
+            $OBJ | Add-Member -MemberType NoteProperty -Name HtmlDocument -Value $DOMOBJ
+            $OBJ | Add-Member -MemberType NoteProperty -Name ResponseText -Value $HTMLSTRING
+        }
+        return $OBJ
     }
 }
