@@ -41,9 +41,9 @@ The PSCustomObject will always have member objects
   
 **Complex Example:**        Sending a JSON file via HTTP POST to https://bit.ly/2TpJ1to, which redirects to https://nanick.hopto.org/file  
 ```powershell
-"This is super important and must appear, server-side, as POST data." | out-File C:\TEMP\TEST.txt -encoding UTF8
-$FILE = [System.IO.File]::OpenRead("C:\TEMP\TEST.txt")
-$URI = "https://nanick.hopto.org/file"
+"{`"JSON`": {`"MESSAGETYPE`": `"TEXT`",`"MESSAGE`": `"This is super important and must appear, server-side, as POST data.`"}}" | Out-File C:\TEMP\TEST.json
+$FILE = [System.IO.File]::OpenRead("C:\TEMP\TEST.json")
+$URI = "https://bit.ly/2TpJ1to"
 $HEADERS = [ordered]@{"x-requested-with"="XMLHttpRequest";}
 $COOKIES = [System.Net.CookieCollection]::New()
 $COOKIES.Add(
@@ -77,13 +77,10 @@ $RET = Execute-WebRequest -METHOD POST `
 -FILE $FILE `
 -BEARER $BEARER `
 -CSRF $CSRF `
--CONTENT_TYPE "application/octet-stream" `
+-CONTENT_TYPE "application/json" `
 -REFERER "https://nanick.hopto.org/" `
 -GET_REDIRECT_URI
-
-$RET | ConvertTo-Json
-
-```
+```  
 Here is the HTTP POST request that the script above creates.
 
 ```
