@@ -23,12 +23,11 @@ PowerShell function to perform HTTP requests centered around .NET class System.N
 
 ## Usage
 
-*   **Send HTTP GET request to https://nanick.hopto.org/file. This is likely the simplest example.**
-
-Note: The **-NO_COOKIE** switch skips the collection of cookies and allows the command to finish much faster.
+**Example:**        Sending an HTTP GET request to https://nanick.hopto.org/file  
 ```powershell
 $RET = Execute-WebRequest -METHOD GET -URI "https://nanick.hopto.org/file" -NO_COOKIE
 ```
+*        Note: The **-NO_COOKIE** switch skips the collection of cookies and allows the command to finish much faster.*  
 $RET returns a **System.Management.Automation.PSCustomObject**.
 The PSCustomObject will always have member objects
 
