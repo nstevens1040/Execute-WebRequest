@@ -65,5 +65,6 @@ $RET = Execute-WebRequest -METHOD POST `
 -REFERER "https://nanick.hopto.org/" `
 -GET_REDIRECT_URI
 
-$RET | ConvertTo-Json</code></pre>
+$RET | ConvertTo-Json
+
 ```
