@@ -29,7 +29,17 @@ Note: The **-NO_COOKIE** switch skips the collection of cookies and allows the c
 ```powershell
 $RET = Execute-WebRequest -METHOD GET -URI "https://nanick.hopto.org/file" -NO_COOKIE
 ```
+$RET returns a **System.Management.Automation.PSCustomObject**.
+The PSCustomObject will always have member objects
 
+| Name                | TypeName                                                                                                                                                                                                                                                                                                                                                          |
+|---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| HttpResponseMessage | [System.Threading.Tasks.Task`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]]]                                                                                                                                                                                                        |
+| CookieCollection    | [System.Net.CookieCollection]                                                                                                                                                                                                                                                                                                                                     |
+| HtmlDocument        | [mshtml.HTMLDocumentClass]                                                                                                                                                                                                                                                                                                                                        |
+| HttpResponseHeaders | [System.Collections.Generic.KeyValuePair`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.Collections.Generic.IEnumerable`1[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]][]] |
+
+*   **HttpResponseMessage** 
 *   **Here is probably the most complex example I can think of. The script sends a file to my web server via HTTP POST.**
 ```powershell
 "This is super important and must appear, server-side, as POST data." | out-File C:\TEMP\TEST.txt -encoding UTF8
