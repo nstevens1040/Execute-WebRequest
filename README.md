@@ -68,7 +68,7 @@ $RET = Execute-WebRequest -METHOD POST `
 $RET | ConvertTo-Json
 
 ```
-Here is the HTTP POST request that this script just created.
+Here is the HTTP POST request that the script above creates.
 
 ```
 POST /file
