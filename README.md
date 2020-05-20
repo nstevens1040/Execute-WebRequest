@@ -23,7 +23,7 @@ PowerShell function to perform HTTP requests centered around .NET class System.N
 
 ## Usage
 
-**Example:**        Sending an HTTP GET request to https://nanick.hopto.org/file  
+**Basic Example:**        Sending an HTTP GET request to https://nanick.hopto.org/file  
 ```powershell
 $RET = Execute-WebRequest -METHOD GET -URI "https://nanick.hopto.org/file" -NO_COOKIE
 ```
@@ -38,9 +38,8 @@ The PSCustomObject will always have member objects
 | CookieCollection    | System.Net.CookieCollection                 |
 | HtmlDocument        | mshtml.HTMLDocumentClass                    |
 | HttpResponseHeaders | System.Net.Http.Headers.HttpResponseHeaders |
-
-*   **HttpResponseMessage** 
-*   **Here is probably the most complex example I can think of. The script sends a file to my web server via HTTP POST.**
+  
+**Complex Example:**        Sending a JSON file via HTTP POST to https://bit.ly/2TpJ1to, which redirects to https://nanick.hopto.org/file  
 ```powershell
 "This is super important and must appear, server-side, as POST data." | out-File C:\TEMP\TEST.txt -encoding UTF8
 $FILE = [System.IO.File]::OpenRead("C:\TEMP\TEST.txt")
