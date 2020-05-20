@@ -27,7 +27,7 @@ PowerShell function to perform HTTP requests centered around .NET class System.N
 ```powershell
 $RET = Execute-WebRequest -METHOD GET -URI "https://nanick.hopto.org/file" -NO_COOKIE
 ```
-*    Note: The **-NO_COOKIE** switch skips the collection of cookies and allows the command to finish much faster.*  
+*Note: The **-NO_COOKIE** switch skips the collection of cookies and allows the command to finish much faster.*  
 
 $RET returns a **System.Management.Automation.PSCustomObject**.
 The PSCustomObject will always have member objects
