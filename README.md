@@ -39,11 +39,11 @@ The PSCustomObject will always have member objects
 | HtmlDocument        | mshtml.HTMLDocumentClass                    |
 | HttpResponseHeaders | System.Net.Http.Headers.HttpResponseHeaders |
   
-**Complex Example:**        Sending a JSON file via HTTP POST to https://bit.ly/2TpJ1to, which redirects to https://nanick.hopto.org/file  
+**Complex Example:**        Sending a JSON file via HTTP POST to https://rb.gy/bjmd1z, which redirects to https://nanick.hopto.org/file  
 ```powershell
 "{`"JSON`": {`"MESSAGETYPE`": `"TEXT`",`"MESSAGE`": `"This is super important and must appear, server-side, as POST data.`"}}" | Out-File C:\TEMP\TEST.json
 $FILE = [System.IO.File]::OpenRead("C:\TEMP\TEST.json")
-$URI = "https://bit.ly/2TpJ1to"
+$URI = "https://rb.gy/bjmd1z"
 $HEADERS = [ordered]@{"x-requested-with"="XMLHttpRequest";}
 $COOKIES = [System.Net.CookieCollection]::New()
 $COOKIES.Add(
