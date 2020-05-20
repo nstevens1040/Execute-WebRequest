@@ -23,7 +23,7 @@ PowerShell function to perform HTTP requests centered around .NET class System.N
 
 ## Usage
 
-*   **Here is probably the simplest example. HTTP GET /file request to my web server (always returns 204 NoContent)**
+*   **Send HTTP GET request to https://nanick.hopto.org/file. This is likely the simplest example. The -NO_COOKIE switch skips the collection of cookies and allows the command to finish much faster.**
 ```powershell
 $RET = Execute-WebRequest -METHOD GET -URI "https://nanick.hopto.org/file" -NO_COOKIE
 ```
