@@ -24,8 +24,8 @@ PowerShell function to perform HTTP requests centered around .NET class System.N
 ## Usage
 
 *   **Here is probably the most complex example I can think of:**
-
-    <pre><code>"This is super important and must appear, server-side, as POST data." | out-File C:\TEMP\TEST.txt -encoding UTF8
+```powershell
+"This is super important and must appear, server-side, as POST data." | out-File C:\TEMP\TEST.txt -encoding UTF8
 $FILE = [System.IO.File]::OpenRead("C:\TEMP\TEST.txt")
 $URI = "https://nanick.hopto.org/file"
 $HEADERS = [ordered]@{"x-requested-with"="XMLHttpRequest";}
@@ -66,6 +66,4 @@ $RET = Execute-WebRequest -METHOD POST `
 -GET_REDIRECT_URI
 
 $RET | ConvertTo-Json</code></pre>
-
-
-    
+```
