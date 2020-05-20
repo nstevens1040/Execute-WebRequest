@@ -15,7 +15,7 @@ PowerShell function to perform HTTP requests centered around .NET class System.N
 
 *   **Launch PowerShell and run the code below:**
 
-    <pre><code>mkdir C:\TEMP\BIN
+    <pre><code>mkdir C:\TEMP\BIN -ea 0
     cd C:\TEMP\BIN 
     git clone https://github.com/nstevens1040/Execute-WebRequest.git
     cd Execute-WebRequest
