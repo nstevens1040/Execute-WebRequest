@@ -1,7 +1,6 @@
 # Execute-WebRequest
 PowerShell function to perform HTTP requests centered around .NET class System.Net.Http.HttpClient
 
-## Under Construction Again! Some of the instruction below may not reflect how this solution is intended to be used!
 ## Requirements
 
 *   **Microsoft Windows** operating system
