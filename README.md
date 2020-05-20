@@ -5,11 +5,11 @@ PowerShell function to perform HTTP requests centered around .NET class System.N
 
 *   **Microsoft Windows** operating system
 
-        (tested on **Windows 10** Version 1909 OS build 18363.720 and **Windows Server 2016** Version 1607 OS build 14393.3564)
+       (tested on **Windows 10** Version 1909 OS build 18363.720 and **Windows Server 2016** Version 1607 OS build 14393.3564)
 
 *   **Windows PowerShell**, minimum version 3.0
 
-        (tested PowerShell versions **3.0**, **5.1.14393.3471**, and **5.1.18362.628**. I have not tested PowerShell Core.)
+       (tested PowerShell versions **3.0**, **5.1.14393.3471**, and **5.1.18362.628**. I have not tested PowerShell Core.)
 
 ## Installation
 
