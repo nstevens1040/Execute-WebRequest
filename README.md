@@ -23,7 +23,7 @@ PowerShell function to perform HTTP requests centered around .NET class System.N
 
 ## Usage
 
-*   **Here is probably the most complex example I can think of:**
+*   **Here is probably the most complex example I can think of. The script sends a file to my web server via HTTP POST.**
 ```powershell
 "This is super important and must appear, server-side, as POST data." | out-File C:\TEMP\TEST.txt -encoding UTF8
 $FILE = [System.IO.File]::OpenRead("C:\TEMP\TEST.txt")
