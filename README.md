@@ -68,6 +68,26 @@ $RET = Execute-WebRequest -METHOD POST `
 $RET | ConvertTo-Json
 
 ```
+Here is the HTTP POST request that this script just created.
+
+```
+POST /file
+
+x-csrf-token : 8_fake_csrf_token_e7a5f123dce407
+x-requested-with : XMLHttpRequest
+Path : /file
+Content-Length : 72
+Accept : application/octet-stream
+Accept-Encoding : gzip, deflate
+Authorization : Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D_FAKE_TOKEN_1IUq16cHjhLTvJu4FA33AGWWjCpTnA
+Cookie : guest_id=v1%3A158994263807059279
+Host : nanick.hopto.org
+Referer : https://nanick.hopto.org/
+User-Agent : Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36
+
+This is super important and must appear, server-side, as POST data.
+
+```
 
 Here is what you should see after running $RET | ConvertTo-Json (The object returned from Execute-WebRequest converted to JSON).
 
