@@ -23,7 +23,7 @@ PowerShell function to perform HTTP requests centered around .NET class System.N
 
 ## Usage
 
-**Basic Example:**        Sending an HTTP GET request to https://nanick.hopto.org/file  
+**Basic Example:**        Sending a HTTP GET request to https://nanick.hopto.org/file  
 ```powershell
 $RET = Execute-WebRequest -METHOD GET -URI "https://nanick.hopto.org/file" -NO_COOKIE
 ```
