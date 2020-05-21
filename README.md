@@ -28,16 +28,6 @@ PowerShell function to perform HTTP requests centered around .NET class System.N
 $RET = Execute-WebRequest -METHOD GET -URI "https://nanick.hopto.org/file" -NO_COOKIE
 ```
 *Note: The **-NO_COOKIE** switch skips the collection of cookies and allows the command to finish much faster.*  
-
-$RET returns a **System.Management.Automation.PSCustomObject**.
-The PSCustomObject will always have member objects
-
-| Name                | TypeName                                    |
-|---------------------|---------------------------------------------|
-| HttpResponseMessage | System.Net.Http.HttpResponseMessage         |
-| CookieCollection    | System.Net.CookieCollection                 |
-| HtmlDocument        | mshtml.HTMLDocumentClass                    |
-| HttpResponseHeaders | System.Net.Http.Headers.HttpResponseHeaders |
   
 **Complex Example:**        Sending a JSON file via HTTP POST to https://nanick.hopto.org/file, which redirects to https://github.com/nstevens1040/Execute-WebRequest  
 ```powershell
@@ -100,3 +90,19 @@ User-Agent : Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML
 
 {"JSON": {"MESSAGETYPE": "TEXT","MESSAGE": "This is super important and must appear, server-side, as POST data."}}
 ```  
+Execute-WebRequest returns a **System.Management.Automation.PSCustomObject**.
+The PSCustomObject will always have member objects
+
+| Name                | TypeName                                    |
+|---------------------|---------------------------------------------|
+| HttpResponseMessage | System.Net.Http.HttpResponseMessage         |
+| CookieCollection    | System.Net.CookieCollection                 |
+| HtmlDocument        | mshtml.HTMLDocumentClass                    |
+| HttpResponseHeaders | System.Net.Http.Headers.HttpResponseHeaders |
+  
+And, if applicable, it may also include  
+
+| Name                | TypeName                                    |
+|---------------------|---------------------------------------------|
+| ResponseText        | System.String                               |
+| RedirectUri         | System.String                               |
