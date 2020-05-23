@@ -129,6 +129,12 @@ Function Install-Ewr
     }
     $CR = [System.Text.RegularExpressions.Regex]::New("$([char]13)")
     $LF = [System.Text.RegularExpressions.Regex]::New("$([char]10)")
+    if(![System.IO.Directory]::Exists([System.IO.FileInfo]::New($PROFILE).Directory.FullName)){
+        $null = [System.IO.Directory]::CreateDirectory([System.IO.FileInfo]::New($PROFILE).Directory.FullName)
+    }
+    if(![System.IO.File]::Exists($PROFILE)){
+        "" | Out-File $PROFILE -Encoding Ascii
+    }
     if(!("System.Net.Http.HttpClient" -as [type])){
         $DLL = Load-MissingAssembly -AssemblyName "System.Net.Http"
         if($DLL){
@@ -228,6 +234,12 @@ Function Execute-WebRequest
     }
     $CR = [System.Text.RegularExpressions.Regex]::New("$([char]13)")
     $LF = [System.Text.RegularExpressions.Regex]::New("$([char]10)")
+    if(![System.IO.Directory]::Exists([System.IO.FileInfo]::New($PROFILE).Directory.FullName)){
+        $null = [System.IO.Directory]::CreateDirectory([System.IO.FileInfo]::New($PROFILE).Directory.FullName)
+    }
+    if(![System.IO.File]::Exists($PROFILE)){
+        "" | Out-File $PROFILE -Encoding Ascii
+    }
     if(!("System.Net.Http.HttpClient" -as [type])){
         $DLL = Load-MissingAssembly -AssemblyName "System.Net.Http"
         if($DLL){
