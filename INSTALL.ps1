@@ -152,7 +152,7 @@ Function Install-Ewr
     }
 }
 Add-Type -AssemblyName Microsoft.VisualBasic
-Start-IE
+#Start-IE
 Install-Ewr
 AddAllAssemblies
 function Execute-WebRequest {
