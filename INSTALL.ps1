@@ -126,6 +126,9 @@ function Execute-WebRequest {
                         Arguments=" install NuGet.CommandLine -y";
                         Verb="RunAs";
                     }
+                    RedirectStandardOutput=$true;
+                    RedirectStandardError=$true;
+                    UseShellExecute=$false;
                 }
                 $null = $p.Start()
                 $p.WaitForExit()
@@ -142,6 +145,7 @@ function Execute-WebRequest {
     if(!("System.Net.Http" -as [type])){
         $DLL = Load-MissingAssembly -AssemblyName "System.Net.Http"
         if($DLL){
+            if($DLL.GetType() -eq [object[]]){ $DLL = $DLL[-1] }
             Add-Type -Path $DLL
             remove-Variable DLL -ea 0
         }
@@ -149,6 +153,7 @@ function Execute-WebRequest {
     if(!("System.Security.Cryptography.ProtectedData" -as [type])){
         $DLL = Load-MissingAssembly -AssemblyName "System.Security.Cryptography.ProtectedData"
         if($DLL){
+            if($DLL.GetType() -eq [object[]]){ $DLL = $DLL[-1] }
             Add-Type -Path $DLL
             remove-variable DLL -ea 0
         }
