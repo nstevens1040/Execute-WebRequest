@@ -111,7 +111,9 @@ Function Execute-WebRequest
             if("$([System.IO.Directory]::GetDirectories("$($PWD.Path)","*$($AssemblyName)*",[System.IO.SearchOption]::AllDirectories))"){
                 cd "$([System.IO.Directory]::GetDirectories("$($PWD.Path)","*$($AssemblyName)*",[System.IO.SearchOption]::AllDirectories))\lib"
                 cd "$([System.IO.Directory]::GetDirectories("$($PWD.Path)","net??",[System.IO.SearchOption]::AllDirectories) | sort | select -Last 1)"
-                return "$([System.io.Directory]::GetFiles("$($PWD.Path)","*.dll"))"
+                $DLL = "$([System.io.Directory]::GetFiles("$($PWD.Path)","*.dll"))"
+                cd "$($SDIR)"
+                return $DLL
             }
         } else {
             if(![system.io.file]::Exists("C:\ProgramData\chocolatey\bin\choco.exe")){
@@ -153,7 +155,7 @@ Function Execute-WebRequest
         if($DLL){
             if($DLL.GetType() -eq [object[]]){ $DLL = $DLL[-1] }
             Add-Type -Path $DLL
-            if($?){ "`nAdd-Type -Path `"$($DLL)`"" | Out-File $PROFILE -Encoding Ascii -Append }
+            if($? -and [array]::IndexOf(@([System.IO.File]::ReadAllLines($PROFILE)),"Add-Type -Path `"$($DLL)`"") -eq -1){ "`nAdd-Type -Path `"$($DLL)`"" | Out-File $PROFILE -Encoding Ascii -Append }
             remove-Variable DLL -ea 0
         }
     }
@@ -162,7 +164,7 @@ Function Execute-WebRequest
         if($DLL){
             if($DLL.GetType() -eq [object[]]){ $DLL = $DLL[-1] }
             Add-Type -Path $DLL
-            if($?){ "`nAdd-Type -Path `"$($DLL)`"" | Out-File $PROFILE -Encoding Ascii -Append }
+            if($? -and [array]::IndexOf(@([System.IO.File]::ReadAllLines($PROFILE)),"Add-Type -Path `"$($DLL)`"") -eq -1){ "`nAdd-Type -Path `"$($DLL)`"" | Out-File $PROFILE -Encoding Ascii -Append }
             remove-variable DLL -ea 0
         }
     }
