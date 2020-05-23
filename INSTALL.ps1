@@ -102,6 +102,7 @@ Function Execute-WebRequest
             [string]$AssemblyName
         )
         $SDIR = "$($PWD.Path)"
+        if([System.Environment]::GetEnvironmentVariable("EXWEBREQ","MACHINE")){ cd "$([System.Environment]::GetEnvironmentVariable("EXWEBREQ","MACHINE"))" }
         if(
             [System.IO.Directory]::GetFiles("C:\Windows\Microsoft.Net\assembly\GAC_MSIL","*$($AssemblyName).dll",[System.IO.SearchOption]::AllDirectories) -or `
             "$([System.IO.Directory]::GetDirectories("$($PWD.Path)","*$($AssemblyName)*",[System.IO.SearchOption]::AllDirectories))"
