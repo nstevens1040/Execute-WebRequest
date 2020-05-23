@@ -6,10 +6,6 @@ if ($MyInvocation.MyCommand.Path) {
 else {
     $GLOBAL:CDIR = "$($PWD.Path)"
 }
-function AddAllAssemblies {
-    param()
-    @([System.IO.Directory]::GetFiles("$([System.Environment]::GetEnvironmentVariable("EXWEBREQ","MACHINE"))\Assemblies", "*.dll", [System.IO.SearchOption]::AllDirectories)).ForEach( { Add-Type -Path $_ })
-}
 Function SeletCustomFolder {
     Add-Type -AssemblyName System.Windows.Forms
     $PICKER = [System.Windows.Forms.FolderBrowserDialog]::new()
@@ -38,8 +34,8 @@ Function Install-Ewr
 {
     [cmdletbinding()]
     Param()
-    if ([System.IO.Directory]::GetFiles("$($PWD.Path)", "Microsoft.VisualBasic.dll", [System.IO.SearchOption]::AllDirectories)) {
-        add-type -path "$([System.IO.Directory]::GetFiles("$($PWD.Path)","Microsoft.VisualBasic.dll",[System.IO.SearchOption]::AllDirectories))"
+    if ([System.IO.File]::Exists("C:\Windows\Microsoft.Net\assembly\GAC_MSIL\Microsoft.VisualBasic\v4.0_10.0.0.0__b03f5f7f11d50a3a\Microsoft.VisualBasic.dll")) {
+        add-type -path "C:\Windows\Microsoft.Net\assembly\GAC_MSIL\Microsoft.VisualBasic\v4.0_10.0.0.0__b03f5f7f11d50a3a\Microsoft.VisualBasic.dll"
     }
     $EXWEBREQ = $GLOBAL:CDIR
     if (![System.Environment]::GetEnvironmentVariable("EXWEBREQ", "MACHINE")) {
@@ -76,10 +72,11 @@ Function Install-Ewr
         }
     }
 }
-Add-Type -AssemblyName Microsoft.VisualBasic
+
 Install-Ewr
-AddAllAssemblies
-function Execute-WebRequest {
+Function Execute-WebRequest
+{
+
     Param(
         [ValidateSet('GET', 'POST', 'HEAD', 'OPTIONS')]
         [String]$METHOD,
@@ -136,9 +133,6 @@ function Execute-WebRequest {
                         Arguments=" install NuGet.CommandLine -y";
                         Verb="RunAs";
                     }
-                    RedirectStandardOutput=$true;
-                    RedirectStandardError=$true;
-                    UseShellExecute=$false;
                 }
                 $null = $p.Start()
                 $p.WaitForExit()
@@ -152,6 +146,8 @@ function Execute-WebRequest {
             return "$([System.io.Directory]::GetFiles("$($TDIR)","*.dll"))"
         }
     }
+    $CR = [System.Text.RegularExpressions.Regex]::New("$([char]13)")
+    $LF = [System.Text.RegularExpressions.Regex]::New("$([char]10)")
     if(!("System.Net.Http" -as [type])){
         $DLL = Load-MissingAssembly -AssemblyName "System.Net.Http"
         if($DLL){
@@ -488,12 +484,27 @@ function Execute-WebRequest {
         return $OBJ
     }
 }
+$CR = [System.Text.RegularExpressions.Regex]::New("$([char]13)")
+$LF = [System.Text.RegularExpressions.Regex]::New("$([char]10)")
 if(![System.IO.Directory]::Exists([System.IO.FileInfo]::New($PROFILE).Directory.FullName)){
     $null = [System.IO.Directory]::CreateDirectory([System.IO.FileInfo]::New($PROFILE).Directory.FullName)
 }
 if(![System.IO.File]::Exists($PROFILE)){
     "" | Out-File $PROFILE -Encoding Ascii
 }
-"Function Execute-WebRequest`n{" | Out-File $PROFILE -Encoding ascii -Append
-@("$(Get-Command Execute-WebRequest | % ScriptBlock)".Split("`n")).forEach({$_ | out-file $PROFILE -Encoding ascii -Append })
-"}`n" | Out-File $PROFILE -Encoding ascii -Append
+if("Function Execute-WebRequest" -in @([System.IO.File]::ReadAllLines($PROFILE))){
+    [Int32]$sindex = [array]::IndexOf([System.IO.File]::ReadAllLines($PROFILE),"Function Execute-WebRequest")
+    [Int32]$eindex = [array]::IndexOf(
+        @([System.IO.File]::ReadAllLines($PROFILE)[$sindex..(@([System.IO.File]::ReadAllLines($PROFILE)).Count)]),
+        @([System.IO.File]::ReadAllLines($PROFILE)[$sindex..(@([System.IO.File]::ReadAllLines($PROFILE)).Count)]).Where({$_ -match "^}$"})[0]
+    )
+    $Remove_Ewr = @()
+    @([System.IO.File]::ReadAllLines($PROFILE))[0..($sindex - 1)].forEach({ $Remove_Ewr += $_  })
+    @([System.IO.File]::ReadAllLines($PROFILE))[($sindex + $eindex + 1)..(@([System.IO.File]::ReadAllLines($PROFILE)).Count)].forEach({ $Remove_Ewr += $_ })
+    "" | Out-File $PROFILE -Encoding ascii
+    $Remove_Ewr -join "`n"  | Out-File $PROFILE -Encoding ascii -Append
+}
+$LF.Replace($CR.Replace("Function Execute-WebRequest",''),'') | Out-File $PROFILE -Encoding ascii -Append
+$LF.Replace($CR.Replace("{",''),'') | Out-File $PROFILE -Encoding ascii -Append
+"$(Get-Command Execute-WebRequest | % ScriptBlock)" | Out-File $PROFILE -Encoding ascii -Append
+$LF.Replace($CR.Replace("}",''),'') | Out-File $PROFILE -Encoding ascii -Append
