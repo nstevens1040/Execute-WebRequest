@@ -103,6 +103,7 @@ function Execute-WebRequest {
         Param(
             [string]$AssemblyName
         )
+        $SDIR = "$($PWD.Path)"
         if([System.IO.Directory]::GetFiles("C:\Windows\Microsoft.Net\assembly\GAC_MSIL","*$($AssemblyName).dll",[System.IO.SearchOption]::AllDirectories)){
             Add-Type -Path "$([System.IO.Directory]::GetFiles("C:\Windows\Microsoft.Net\assembly\GAC_MSIL","*$($AssemblyName).dll",[System.IO.SearchOption]::AllDirectories))"
         } else {
@@ -133,7 +134,9 @@ function Execute-WebRequest {
             . C:\ProgramData\Chocolatey\lib\NuGet.CommandLine\tools\nuget.exe install $($AssemblyName) -DependencyVersion ignore -OutputDirectory "$($PWD.Path)\Assemblies"
             cd "$([System.IO.Directory]::GetDirectories("$($PWD.Path)","*$($AssemblyName)*",[System.IO.SearchOption]::AllDirectories))\lib"
             cd "$([System.IO.Directory]::GetDirectories("$($PWD.Path)","net??",[System.IO.SearchOption]::AllDirectories) | sort | select -Last 1)"
-            return "$([System.io.Directory]::GetFiles("$($PWD.Path)","*.dll"))"
+            $TDIR = "$($PWD.Path)"
+            cd $SDIR
+            return "$([System.io.Directory]::GetFiles("$($TDIR)","*.dll"))"
         }
     }
     if(!("System.Net.Http" -as [type])){
