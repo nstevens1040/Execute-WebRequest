@@ -19,7 +19,10 @@ PowerShell function to perform HTTP requests centered around .NET class System.N
     cd C:\TEMP\BIN 
     git clone https://github.com/nstevens1040/Execute-WebRequest.git
     cd Execute-WebRequest
-    . .\INSTALL.ps1</code></pre>
+    . .\INSTALL.ps1</code></pre>  
+
+*   **You can also launch PowerShell and install Execute-WebRequest like this:**
+    <pre><code>iex (irm "https://raw.githubusercontent.com/nstevens1040/Execute-WebRequest/master/INSTALL.ps1")</code></pre>  
 
 ## Usage
 
