@@ -6,7 +6,7 @@ if ($MyInvocation.MyCommand.Path) {
 else {
     $GLOBAL:CDIR = "$($PWD.Path)"
 }
-Function SeletCustomFolder {
+Function SelectCustomFolder {
     Add-Type -AssemblyName System.Windows.Forms
     $PICKER = [System.Windows.Forms.FolderBrowserDialog]::new()
     $PICKER.RootFolder = "Desktop"
@@ -56,7 +56,7 @@ Function Install-Ewr
             "No" {
                 $ans = "No"
                 While ($ans -eq "No") {
-                    $EXWEBREQ = SeletCustomFolder
+                    $EXWEBREQ = SelectCustomFolder
                     $ans = [microsoft.visualbasic.Interaction]::MsgBox(
                         "Click 'Yes' to set environment variable:`n`n`t%EXWEBREQ%`nto:`n`t'$($EXWEBREQ)'`n`nClick 'No' to select another folder.",
                         [Microsoft.VisualBasic.MsgBoxStyle]::YesNo,
