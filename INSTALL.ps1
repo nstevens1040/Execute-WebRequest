@@ -94,6 +94,7 @@ Function Execute-WebRequest
         [switch]$GET_REDIRECT_URI,
         [System.IO.FileStream]$FILE
     )
+    $URI = $URI.ToLower()
     Function Load-MissingAssembly
     {
         [cmdletbinding()]
