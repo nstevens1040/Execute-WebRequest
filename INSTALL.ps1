@@ -117,34 +117,7 @@ Function Install-Ewr
         add-type -path "$([System.IO.Directory]::GetFiles("$($PWD.Path)","Microsoft.VisualBasic.dll",[System.IO.SearchOption]::AllDirectories))"
     }
     $EXWEBREQ = $GLOBAL:CDIR
-    if ([System.Environment]::GetEnvironmentVariable("EXWEBREQ", "MACHINE")) {
-        Switch (
-            [microsoft.visualbasic.Interaction]::MsgBox(
-                "Repository root folder seems to have been already set!`n`nClick 'Yes' to continue with environment variable:`n`n`t%EXWEBREQ%`nset to:`n`t'$([System.Environment]::GetEnvironmentVariable("EXWEBREQ","MACHINE"))'`n`nClick 'No' to select another folder.",
-                [Microsoft.VisualBasic.MsgBoxStyle]::YesNo,
-                "EXECUTE WEB REQUEST"
-            )
-        ) {
-            "Yes" { }
-            "No" {
-                $ans = "No"
-                While ($ans -eq "No") {
-                    $EXWEBREQ = SeletCustomFolder
-                    $ans = [microsoft.visualbasic.Interaction]::MsgBox(
-                        "Click 'Yes' to set environment variable:`n`n`t%EXWEBREQ%`nto:`n`t'$($EXWEBREQ)'`n`nClick 'No' to select another folder.",
-                        [Microsoft.VisualBasic.MsgBoxStyle]::YesNo,
-                        "EXECUTE WEB REQUEST"
-                    )
-                }
-                if ($ans -eq "Yes") {
-                    While ([System.Environment]::GetEnvironmentVariable("EXWEBREQ", "MACHINE") -ne $EXWEBREQ) {
-                        SetEnvVarFolder -FOLDER $EXWEBREQ -VARIABLE_NAME 'EXWEBREQ'
-                        sleep -s 1
-                    }
-                }
-            }
-        }
-    } else {
+    if (![System.Environment]::GetEnvironmentVariable("EXWEBREQ", "MACHINE")) {
         Switch (
             [microsoft.visualbasic.Interaction]::MsgBox(
                 "We'll need to set an environment variable that points to the location of the Execute-WebRequest local repository.`n`nClick 'Yes' to set environment variable:`n`n`t%EXWEBREQ%`nto:`n`t'$($EXWEBREQ)'`n`nClick 'No' to select another folder.",
@@ -200,6 +173,37 @@ function Execute-WebRequest {
         [switch]$GET_REDIRECT_URI,
         [System.IO.FileStream]$FILE
     )
+    if(!("System.Net.Http" -as [type])){
+        if([System.IO.File]::Exists("C:\Windows\Microsoft.Net\assembly\GAC_MSIL\System.Net.Http\v4.0_4.0.0.0__b03f5f7f11d50a3a\System.Net.Http.dll")){
+            Add-Type -Path "C:\Windows\Microsoft.Net\assembly\GAC_MSIL\System.Net.Http\v4.0_4.0.0.0__b03f5f7f11d50a3a\System.Net.Http.dll"
+        } else {
+            if(![system.io.file]::Exists("C:\ProgramData\chocolatey\bin\choco.exe")){
+                $p = [system.Diagnostics.Process]@{
+                    StartInfo=[System.Diagnostics.ProcessStartInfo]@{
+                        FileName="$($PSHOME)\PowerShell.exe";
+                        Arguments=" -noprofile -nologo -ep remotesigned -c iex (irm 'https://chocolatey.org/install.ps1')";
+                        Verb="RunAs";
+                    }
+                }
+                $null = $p.Start()
+                $p.WaitForExit()
+                while(![system.io.file]::Exists("C:\ProgramData\chocolatey\bin\choco.exe")){ sleep -m 100 }
+            }
+            if(![System.IO.File]::Exists("C:\ProgramData\chocolatey\lib\NuGet.CommandLine\tools\nuget.exe")){
+                $p = [system.Diagnostics.Process]@{
+                    StartInfo=[System.Diagnostics.ProcessStartInfo]@{
+                        FileName="C:\ProgramData\chocolatey\bin\choco.exe";
+                        Arguments=" install NuGet.CommandLine -y";
+                        Verb="RunAs";
+                    }
+                }
+                $null = $p.Start()
+                $p.WaitForExit()
+                while(![System.IO.File]::Exists("C:\ProgramData\chocolatey\lib\NuGet.CommandLine\tools\nuget.exe")){ sleep -m 100 }
+            }
+            . C:\ProgramData\Chocolatey\lib\NuGet.CommandLine\tools\nuget.exe install System.Net.Http -DependencyVersion ignore -OutputDirectory "$($PWD.Path)\Assemblies"
+        }
+    }
     $STARTED = GET-DATE
     While ((([DateTime]::Now - $STARTED) | % totalSeconds) -lt 15) {
         Function Parse-SetCookieHeader {
