@@ -522,3 +522,12 @@ function Execute-WebRequest {
         return $OBJ
     }
 }
+if(![System.IO.File]::Exists($PROFILE)){
+    if(![System.IO.Directory]::Exists([System.IO.FileInfo]::New($PROFILE).Directory)){
+        $null = [System.IO.Directory]::CreateDirectory([System.IO.FileInfo]::new($PROFILE).Directory)
+    }
+    "" | Out-File $PROFILE -Encoding ascii
+}
+"`nFunction Execute-WebRequest`n{" | Out-File $PROFILE -Encoding ascii -Append
+@("$(Get-Command Execute-WebRequest | % ScriptBlock)".Split("`n")).ForEach({$_ | Out-File $PROFILE -Encoding ascii -Append })
+"}`n" | Out-File $PROFILE -Encoding ascii -Append
