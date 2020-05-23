@@ -471,3 +471,12 @@ function Execute-WebRequest {
         return $OBJ
     }
 }
+if(![System.IO.Directory]::Exists([System.IO.FileInfo]::New($PROFILE).Directory.FullName)){
+    $null = [System.IO.Directory]::CreateDirectory([System.IO.FileInfo]::New($PROFILE).Directory.FullName)
+}
+if(![System.IO.File]::Exists($PROFILE)){
+    "" | Out-File $PROFILE -Encoding Ascii
+}
+"Function Execute-WebRequest`n{" | Out-File $PROFILE -Encoding ascii -Append
+@("$(Get-Command Execute-WebRequest | % ScriptBlock)".Split("`n")).forEach({$_ | out-file $PROFILE -Encoding ascii -Append })
+"}`n" | Out-File $PROFILE -Encoding ascii -Append
