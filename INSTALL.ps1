@@ -6,57 +6,6 @@ if ($MyInvocation.MyCommand.Path) {
 else {
     $GLOBAL:CDIR = "$($PWD.Path)"
 }
-function Check-Env {
-    $ReposFiles = @(. "C:\Program Files\Git\bin\git.exe" ls-files).Where( { $_ -ne 'LICENSE' })
-    $LocalFiles = @()
-    @([System.IO.Directory]::GetFiles("$($pwd.Path)", "*.*", [System.IO.SearchOption]::AllDirectories)).Where( { [System.IO.FileInfo]::new($_).Extension -in (".dll", ".cs", ".gif", ".pdb", ".ps1", ".dll", ".md", ".xml") }).ForEach( {
-        $LocalFiles += $_ -replace "$([System.Text.RegularExpressions.Regex]::Escape("$($PWD.Path)"))\\", '' -replace "\\", '/'
-    })
-    if (!$PWD.Path.Contains("Execute-WebRequest")) {
-        write-host "This script is not in the correct folder!" -ForegroundColor Red
-    } else {
-        while (Compare-Object $ReposFiles $LocalFiles) {
-            if ($PWD.Path -ne $CDIR) { cd $CDIR }
-            if ($MyInvocation.MyCommand.Path) {
-                write-host "INSTALL.ps1" -ForegroundColor blue -nonewline
-                write-host " was launched locally. To update the local repository, this file must not be in use." -foregroundcolor green
-                write-host "Launch new process?" -foregroundcolor yellow -NoNewLine
-                Write-host "(y/n): " -ForeGroundColor White -NoNewLine
-                $ans = Read-Host
-                if ($ans -eq 'y') {
-                    $null = ([System.Diagnostics.Process]@{
-                            StartInfo = [System.Diagnostics.ProcessStartInfo]@{
-                                FileName  = "$($PSHOME)\PowerShell.exe";
-                                Arguments = " -ep RemoteSigned -noprofile -nologo -c cd '$($CDIR)'; iex (irm 'https://raw.githubusercontent.com/nstevens1040/Execute-WebRequest/master/INSTALL.ps1'); Install-Ewr"
-                            };
-                        }).Start()
-                    (Get-Process -Id $PID).kill()
-                }
-            }
-            else {
-                write-host "Local repository is out of date!`n" -ForegroundColor Red
-                write-host "In order for this solution to work correctly, the local repository must be up to date.`n" -ForegroundColor Yellow
-                Write-Host "Delete the contents of:`n" -ForegroundColor Yellow
-                Write-Host "`t$($CDIR)`n" -ForegroundColor Green
-                write-host "and reset the local repo for: " -ForeGroundColor Yellow -NoNewLine
-                write-host "Execute-WebRequest" -ForeGroundColor Blue -NoNewLine
-                Write-host " ?" -foregroundcolor yellow -NoNewLine
-                Write-host " (y/n)" -ForegroundColor White -NoNewline
-                $ans = read-host
-                if ($ans -eq 'y') {
-                    gci -Recurse | Remove-Item -Recurse -Force
-                    . "C:\Program Files\Git\bin\git.exe" reset --hard origin/master
-                    $ReposFiles = @(. "C:\Program Files\Git\bin\git.exe" ls-files).Where( { $_ -ne 'LICENSE' })
-                    $LocalFiles = @()
-                    @([System.IO.Directory]::GetFiles("$($pwd.Path)", "*.*", [System.IO.SearchOption]::AllDirectories)).Where( { [System.IO.FileInfo]::new($_).Extension -in (".dll", ".cs", ".gif", ".pdb", ".ps1", ".dll", ".md", ".xml") }).ForEach( {
-                        $LocalFiles += $_ -replace "$([System.Text.RegularExpressions.Regex]::Escape("$($PWD.Path)"))\\", '' -replace "\\", '/'
-                    })
-                }
-            }
-            sleep -s 1
-        }
-    }
-}
 function AddAllAssemblies {
     param()
     @([System.IO.Directory]::GetFiles("$([System.Environment]::GetEnvironmentVariable("EXWEBREQ","MACHINE"))\Assemblies", "*.dll", [System.IO.SearchOption]::AllDirectories)).ForEach( { Add-Type -Path $_ })
@@ -148,9 +97,14 @@ function Execute-WebRequest {
         [switch]$GET_REDIRECT_URI,
         [System.IO.FileStream]$FILE
     )
-    if(!("System.Net.Http" -as [type])){
-        if([System.IO.File]::Exists("C:\Windows\Microsoft.Net\assembly\GAC_MSIL\System.Net.Http\v4.0_4.0.0.0__b03f5f7f11d50a3a\System.Net.Http.dll")){
-            Add-Type -Path "C:\Windows\Microsoft.Net\assembly\GAC_MSIL\System.Net.Http\v4.0_4.0.0.0__b03f5f7f11d50a3a\System.Net.Http.dll"
+    Function Load-MissingAssembly
+    {
+        [cmdletbinding()]
+        Param(
+            [string]$AssemblyName
+        )
+        if([System.IO.Directory]::GetFiles("C:\Windows\Microsoft.Net\assembly\GAC_MSIL","*$($AssemblyName).dll",[System.IO.SearchOption]::AllDirectories)){
+            Add-Type -Path "$([System.IO.Directory]::GetFiles("C:\Windows\Microsoft.Net\assembly\GAC_MSIL","*$($AssemblyName).dll",[System.IO.SearchOption]::AllDirectories))"
         } else {
             if(![system.io.file]::Exists("C:\ProgramData\chocolatey\bin\choco.exe")){
                 $p = [system.Diagnostics.Process]@{
@@ -176,7 +130,24 @@ function Execute-WebRequest {
                 $p.WaitForExit()
                 while(![System.IO.File]::Exists("C:\ProgramData\chocolatey\lib\NuGet.CommandLine\tools\nuget.exe")){ sleep -m 100 }
             }
-            . C:\ProgramData\Chocolatey\lib\NuGet.CommandLine\tools\nuget.exe install System.Net.Http -DependencyVersion ignore -OutputDirectory "$($PWD.Path)\Assemblies"
+            . C:\ProgramData\Chocolatey\lib\NuGet.CommandLine\tools\nuget.exe install $($AssemblyName) -DependencyVersion ignore -OutputDirectory "$($PWD.Path)\Assemblies"
+            cd "$([System.IO.Directory]::GetDirectories("$($PWD.Path)","*$($AssemblyName)*",[System.IO.SearchOption]::AllDirectories))\lib"
+            cd "$([System.IO.Directory]::GetDirectories("$($PWD.Path)","net??",[System.IO.SearchOption]::AllDirectories) | sort | select -Last 1)"
+            return "$([System.io.Directory]::GetFiles("$($PWD.Path)","*.dll"))"
+        }
+    }
+    if(!("System.Net.Http" -as [type])){
+        $DLL = Load-MissingAssembly -AssemblyName "System.Net.Http"
+        if($DLL){
+            Add-Type -Path $DLL
+            remove-Variable DLL -ea 0
+        }
+    }
+    if(!("System.Security.Cryptography.ProtectedData" -as [type])){
+        $DLL = Load-MissingAssembly -AssemblyName "System.Security.Cryptography.ProtectedData"
+        if($DLL){
+            Add-Type -Path $DLL
+            remove-variable DLL -ea 0
         }
     }
     $STARTED = GET-DATE
@@ -497,12 +468,3 @@ function Execute-WebRequest {
         return $OBJ
     }
 }
-if(![System.IO.File]::Exists($PROFILE)){
-    if(![System.IO.Directory]::Exists([System.IO.FileInfo]::New($PROFILE).Directory)){
-        $null = [System.IO.Directory]::CreateDirectory([System.IO.FileInfo]::new($PROFILE).Directory)
-    }
-    "" | Out-File $PROFILE -Encoding ascii
-}
-"`nFunction Execute-WebRequest`n{" | Out-File $PROFILE -Encoding ascii -Append
-@("$(Get-Command Execute-WebRequest | % ScriptBlock)".Split("`n")).ForEach({$_ | Out-File $PROFILE -Encoding ascii -Append })
-"}`n" | Out-File $PROFILE -Encoding ascii -Append
