@@ -157,6 +157,7 @@ function Execute-WebRequest {
         if($DLL){
             if($DLL.GetType() -eq [object[]]){ $DLL = $DLL[-1] }
             Add-Type -Path $DLL
+            if($?){ "`nAdd-Type -Path `"$($DLL)`"" | Out-File $PROFILE -Encoding Ascii -Append }
             remove-Variable DLL -ea 0
         }
     }
@@ -165,6 +166,7 @@ function Execute-WebRequest {
         if($DLL){
             if($DLL.GetType() -eq [object[]]){ $DLL = $DLL[-1] }
             Add-Type -Path $DLL
+            if($?){ "`nAdd-Type -Path `"$($DLL)`"" | Out-File $PROFILE -Encoding Ascii -Append }
             remove-variable DLL -ea 0
         }
     }
