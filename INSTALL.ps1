@@ -6,30 +6,6 @@ if ($MyInvocation.MyCommand.Path) {
 else {
     $GLOBAL:CDIR = "$($PWD.Path)"
 }
-Function Start-IE {
-    Param()
-    while (!$test) {
-        try {
-            $test = iwr google.com -ea 0 -Method Head
-        }
-        catch [System.NotSupportedException] {
-            if (!$ans) {
-                $ans = [Microsoft.VisualBasic.Interaction]::MsgBox(
-                    "You will need to open Internet Explorer and complete the 'first run' wizard.",
-                    [Microsoft.VisualBasic.MsgBoxStyle]::OkOnly,
-                    "Execute Web Request"
-                )
-            }
-            if (!$iexplore) {
-                . "C:\program files\internet Explorer\iexplore.exe"
-                while ((get-process iexplore -ea 0)) {
-                    sleep -m 200
-                }
-                $iexplore = $true
-            }
-        }
-    }
-}
 function Check-Env {
     $ReposFiles = @(. "C:\Program Files\Git\bin\git.exe" ls-files).Where( { $_ -ne 'LICENSE' })
     $LocalFiles = @()
@@ -152,7 +128,6 @@ Function Install-Ewr
     }
 }
 Add-Type -AssemblyName Microsoft.VisualBasic
-#Start-IE
 Install-Ewr
 AddAllAssemblies
 function Execute-WebRequest {
