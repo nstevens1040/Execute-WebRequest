@@ -150,7 +150,7 @@ Function Execute-WebRequest
     }
     $CR = [System.Text.RegularExpressions.Regex]::New("$([char]13)")
     $LF = [System.Text.RegularExpressions.Regex]::New("$([char]10)")
-    if(!("System.Net.Http" -as [type])){
+    if(!("System.Net.Http.HttpClient" -as [type])){
         $DLL = Load-MissingAssembly -AssemblyName "System.Net.Http"
         if($DLL){
             if($DLL.GetType() -eq [object[]]){ $DLL = $DLL[-1] }
