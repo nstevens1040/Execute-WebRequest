@@ -1,3 +1,161 @@
+$STARTPATH = "$($PWD.Path)"
+if ($MyInvocation.MyCommand.Path) {
+    $GLOBAL:CDIR = "$([System.IO.FileInfo]::New($MyInvocation.MyCommand.Path).Directory.FullName)"
+    cd $CDIR
+}
+else {
+    $GLOBAL:CDIR = "$($PWD.Path)"
+}
+Function SelectCustomFolder {
+    Add-Type -AssemblyName System.Windows.Forms
+    $PICKER = [System.Windows.Forms.FolderBrowserDialog]::new()
+    $PICKER.RootFolder = "Desktop"
+    $PICKER.ShowNewFolderButton = $true
+    $null = $PICKER.ShowDialog()
+    return "$($PICKER.SelectedPath)"
+}
+Function SetEnvVarFolder {
+    Param(
+        [string]$FOLDER,
+        [string]$VARIABLE_NAME
+    )
+    if (![System.IO.Directory]::Exists($FOLDER)) { $null = [System.IO.Directory]::CreateDirectory($FOLDER) }
+    $null = ([System.Diagnostics.Process]@{
+        StartInfo = [System.Diagnostics.ProcessStartInfo]@{
+            FileName    = "$($PSHOME)\PowerShell.exe";
+            Arguments   = " -WindowStyle Hidden -noprofile -nologo -ep RemoteSigned -c [System.Environment]::SetEnvironmentVariable('$($VARIABLE_NAME)','$($FOLDER)','MACHINE')";
+            Verb        = "RunAs";
+            WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Hidden;
+        }
+    }).Start()
+}
+
+Function Install-Ewr 
+{
+    [cmdletbinding()]
+    Param()
+    if ([System.IO.File]::Exists("C:\Windows\Microsoft.Net\assembly\GAC_MSIL\Microsoft.VisualBasic\v4.0_10.0.0.0__b03f5f7f11d50a3a\Microsoft.VisualBasic.dll")) {
+        add-type -path "C:\Windows\Microsoft.Net\assembly\GAC_MSIL\Microsoft.VisualBasic\v4.0_10.0.0.0__b03f5f7f11d50a3a\Microsoft.VisualBasic.dll"
+    }
+    if(![System.IO.Directory]::Exists("C:\TEMP\BIN\Execute-WebRequest")){ $null = [System.IO.Directory]::CreateDirectory("C:\TEMP\BIN\Execute-WebRequest") }
+    $EXWEBREQ = "C:\TEMP\BIN\Execute-WebRequest"
+    if (![System.Environment]::GetEnvironmentVariable("EXWEBREQ", "MACHINE")) {
+        Switch (
+            [microsoft.visualbasic.Interaction]::MsgBox(
+                "We'll need to set an environment variable that points to the location of the Execute-WebRequest local repository.`n`nClick 'Yes' to set environment variable:`n`n`t%EXWEBREQ%`nto:`n`t'$($EXWEBREQ)'`n`nClick 'No' to select another folder.",
+                [Microsoft.VisualBasic.MsgBoxStyle]::YesNo,
+                "EXECUTE WEB REQUEST"
+            )
+        ) {
+            "Yes" {
+                While (![System.Environment]::GetEnvironmentVariable("EXWEBREQ", "MACHINE")) {
+                    SetEnvVarFolder -FOLDER $EXWEBREQ -VARIABLE_NAME 'EXWEBREQ'
+                    sleep -s 1
+                }
+            }
+            "No" {
+                $ans = "No"
+                While ($ans -eq "No") {
+                    $EXWEBREQ = SelectCustomFolder
+                    $ans = [microsoft.visualbasic.Interaction]::MsgBox(
+                        "Click 'Yes' to set environment variable:`n`n`t%EXWEBREQ%`nto:`n`t'$($EXWEBREQ)'`n`nClick 'No' to select another folder.",
+                        [Microsoft.VisualBasic.MsgBoxStyle]::YesNo,
+                        "EXECUTE WEB REQUEST"
+                    )
+                }
+                if ($ans -eq "Yes") {
+                    While (![System.Environment]::GetEnvironmentVariable("EXWEBREQ", "MACHINE")) {
+                        SetEnvVarFolder -FOLDER $EXWEBREQ -VARIABLE_NAME 'EXWEBREQ'
+                        sleep -s 1
+                    }
+                }
+            }
+        }
+    }
+    Function Load-MissingAssembly
+    {
+        [cmdletbinding()]
+        Param(
+            [string]$AssemblyName
+        )
+        $SDIR = "$($PWD.Path)"
+        if([System.Environment]::GetEnvironmentVariable("EXWEBREQ","MACHINE")){ cd "$([System.Environment]::GetEnvironmentVariable("EXWEBREQ","MACHINE"))" }
+        if(
+            [System.IO.Directory]::GetFiles("C:\Windows\Microsoft.Net\assembly\GAC_MSIL","*$($AssemblyName).dll",[System.IO.SearchOption]::AllDirectories) -or `
+            "$([System.IO.Directory]::GetDirectories("$($PWD.Path)","*$($AssemblyName)*",[System.IO.SearchOption]::AllDirectories))"
+        ){
+            if([System.IO.Directory]::GetFiles("C:\Windows\Microsoft.Net\assembly\GAC_MSIL","*$($AssemblyName).dll",[System.IO.SearchOption]::AllDirectories)){
+                return "$([System.IO.Directory]::GetFiles("C:\Windows\Microsoft.Net\assembly\GAC_MSIL","*$($AssemblyName).dll",[System.IO.SearchOption]::AllDirectories))"
+            }
+            if("$([System.IO.Directory]::GetDirectories("$($PWD.Path)","*$($AssemblyName)*",[System.IO.SearchOption]::AllDirectories))"){
+                cd "$([System.IO.Directory]::GetDirectories("$($PWD.Path)","*$($AssemblyName)*",[System.IO.SearchOption]::AllDirectories))\lib"
+                cd "$([System.IO.Directory]::GetDirectories("$($PWD.Path)","net??",[System.IO.SearchOption]::AllDirectories) | sort | select -Last 1)"
+                $DLL = "$([System.io.Directory]::GetFiles("$($PWD.Path)","*.dll"))"
+                cd "$($SDIR)"
+                return $DLL
+            }
+        } else {
+            if(![system.io.file]::Exists("C:\ProgramData\chocolatey\bin\choco.exe")){
+                $p = [system.Diagnostics.Process]@{
+                    StartInfo=[System.Diagnostics.ProcessStartInfo]@{
+                        FileName="$($PSHOME)\PowerShell.exe";
+                        Arguments=" -noprofile -nologo -ep remotesigned -c iex (irm 'https://chocolatey.org/install.ps1')";
+                        Verb="RunAs";
+                    }
+                }
+                $null = $p.Start()
+                $p.WaitForExit()
+                while(![system.io.file]::Exists("C:\ProgramData\chocolatey\bin\choco.exe")){ sleep -m 100 }
+            }
+            if(![System.IO.File]::Exists("C:\ProgramData\chocolatey\lib\NuGet.CommandLine\tools\nuget.exe")){
+                $p = [system.Diagnostics.Process]@{
+                    StartInfo=[System.Diagnostics.ProcessStartInfo]@{
+                        FileName="C:\ProgramData\chocolatey\bin\choco.exe";
+                        Arguments=" install NuGet.CommandLine -y";
+                        Verb="RunAs";
+                    }
+                }
+                $null = $p.Start()
+                $p.WaitForExit()
+                while(![System.IO.File]::Exists("C:\ProgramData\chocolatey\lib\NuGet.CommandLine\tools\nuget.exe")){ sleep -m 100 }
+            }
+            . C:\ProgramData\Chocolatey\lib\NuGet.CommandLine\tools\nuget.exe install $($AssemblyName) -DependencyVersion ignore -OutputDirectory "$($PWD.Path)\Assemblies"
+            cd "$([System.IO.Directory]::GetDirectories("$($PWD.Path)","*$($AssemblyName)*",[System.IO.SearchOption]::AllDirectories))\lib"
+            cd "$([System.IO.Directory]::GetDirectories("$($PWD.Path)","net??",[System.IO.SearchOption]::AllDirectories) | sort | select -Last 1)"
+            $TDIR = "$($PWD.Path)"
+            cd $SDIR
+            return "$([System.io.Directory]::GetFiles("$($TDIR)","*.dll"))"
+        }
+    }
+    $CR = [System.Text.RegularExpressions.Regex]::New("$([char]13)")
+    $LF = [System.Text.RegularExpressions.Regex]::New("$([char]10)")
+    if(![System.IO.Directory]::Exists([System.IO.FileInfo]::New($PROFILE).Directory.FullName)){
+        $null = [System.IO.Directory]::CreateDirectory([System.IO.FileInfo]::New($PROFILE).Directory.FullName)
+    }
+    if(![System.IO.File]::Exists($PROFILE)){
+        "" | Out-File $PROFILE -Encoding Ascii
+    }
+    if(!("System.Net.Http.HttpClient" -as [type])){
+        $DLL = Load-MissingAssembly -AssemblyName "System.Net.Http"
+        if($DLL){
+            if($DLL.GetType() -eq [object[]]){ $DLL = $DLL[-1] }
+            Add-Type -Path $DLL
+            if($? -and [array]::IndexOf(@([System.IO.File]::ReadAllLines($PROFILE)),"Add-Type -Path `"$($DLL)`"") -eq -1){ "`nAdd-Type -Path `"$($DLL)`"" | Out-File $PROFILE -Encoding Ascii -Append }
+            remove-Variable DLL -ea 0
+        }
+    }
+    if(!("System.Security.Cryptography.ProtectedData" -as [type])){
+        $DLL = Load-MissingAssembly -AssemblyName "System.Security.Cryptography.ProtectedData"
+        if($DLL){
+            if($DLL.GetType() -eq [object[]]){ $DLL = $DLL[-1] }
+            Add-Type -Path $DLL
+            if($? -and [array]::IndexOf(@([System.IO.File]::ReadAllLines($PROFILE)),"Add-Type -Path `"$($DLL)`"") -eq -1){ "`nAdd-Type -Path `"$($DLL)`"" | Out-File $PROFILE -Encoding Ascii -Append }
+            remove-variable DLL -ea 0
+        }
+    }
+}
+
+Install-Ewr
 Function Execute-WebRequest {
     Param(
         [ValidateSet('GET', 'POST', 'HEAD', 'OPTIONS')]
@@ -348,3 +506,27 @@ Function Execute-WebRequest {
         return $OBJ
     }
 }
+$CR = [System.Text.RegularExpressions.Regex]::New("$([char]13)")
+$LF = [System.Text.RegularExpressions.Regex]::New("$([char]10)")
+if(![System.IO.Directory]::Exists([System.IO.FileInfo]::New($PROFILE).Directory.FullName)){
+    $null = [System.IO.Directory]::CreateDirectory([System.IO.FileInfo]::New($PROFILE).Directory.FullName)
+}
+if(![System.IO.File]::Exists($PROFILE)){
+    "" | Out-File $PROFILE -Encoding Ascii
+}
+if("Function Execute-WebRequest" -in @([System.IO.File]::ReadAllLines($PROFILE))){
+    [Int32]$sindex = [array]::IndexOf([System.IO.File]::ReadAllLines($PROFILE),"Function Execute-WebRequest")
+    [Int32]$eindex = [array]::IndexOf(
+        @([System.IO.File]::ReadAllLines($PROFILE)[$sindex..(@([System.IO.File]::ReadAllLines($PROFILE)).Count)]),
+        @([System.IO.File]::ReadAllLines($PROFILE)[$sindex..(@([System.IO.File]::ReadAllLines($PROFILE)).Count)]).Where({$_ -match "^}$"})[0]
+    )
+    $Remove_Ewr = @()
+    @([System.IO.File]::ReadAllLines($PROFILE))[0..($sindex - 1)].forEach({ $Remove_Ewr += $_  })
+    @([System.IO.File]::ReadAllLines($PROFILE))[($sindex + $eindex + 1)..(@([System.IO.File]::ReadAllLines($PROFILE)).Count)].forEach({ $Remove_Ewr += $_ })
+    "" | Out-File $PROFILE -Encoding ascii
+    $Remove_Ewr -join "`n"  | Out-File $PROFILE -Encoding ascii -Append
+}
+$LF.Replace($CR.Replace("Function Execute-WebRequest",''),'') | Out-File $PROFILE -Encoding ascii -Append
+$LF.Replace($CR.Replace("{",''),'') | Out-File $PROFILE -Encoding ascii -Append
+"$(Get-Command Execute-WebRequest | % ScriptBlock)" | Out-File $PROFILE -Encoding ascii -Append
+$LF.Replace($CR.Replace("}",''),'') | Out-File $PROFILE -Encoding ascii -Append
