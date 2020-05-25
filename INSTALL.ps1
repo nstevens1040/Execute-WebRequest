@@ -76,6 +76,7 @@ Function Install-Ewr
             }
         }
     }
+}
     Function Load-MissingAssembly
     {
         [cmdletbinding()]
