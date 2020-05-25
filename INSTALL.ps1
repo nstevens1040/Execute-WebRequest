@@ -29,15 +29,12 @@ Function SetEnvVarFolder {
         }
     }).Start()
 }
-
-Function Install-Ewr 
+Function Install-Ewr
 {
-    [cmdletbinding()]
-    Param()
-    if ([System.IO.File]::Exists("C:\Windows\Microsoft.Net\assembly\GAC_MSIL\Microsoft.VisualBasic\v4.0_10.0.0.0__b03f5f7f11d50a3a\Microsoft.VisualBasic.dll")) {
+    if( [System.IO.File]::Exists("C:\Windows\Microsoft.Net\assembly\GAC_MSIL\Microsoft.VisualBasic\v4.0_10.0.0.0__b03f5f7f11d50a3a\Microsoft.VisualBasic.dll") ) {
         add-type -path "C:\Windows\Microsoft.Net\assembly\GAC_MSIL\Microsoft.VisualBasic\v4.0_10.0.0.0__b03f5f7f11d50a3a\Microsoft.VisualBasic.dll"
     }
-    if([System.IO.DirectoryInfo]::New("$($PWD.Path)").Name -eq 'Execute-WebRequest'){ 
+    if( [System.IO.DirectoryInfo]::New("$($PWD.Path)").Name -eq 'Execute-WebRequest'){ 
         $EXWEBREQ = "$($PWD.Path)"
     } else {
         $EXWEBREQ = "C:\TEMP\BIN\Execute-WebRequest"
@@ -77,90 +74,89 @@ Function Install-Ewr
         }
     }
 }
-    Function Load-MissingAssembly
-    {
-        [cmdletbinding()]
-        Param(
-            [string]$AssemblyName
-        )
-        $SDIR = "$($PWD.Path)"
-        if([System.IO.Directory]::Exists([System.Environment]::GetEnvironmentVariable("EXWEBREQ","MACHINE"))){ 
-            cd "$([System.Environment]::GetEnvironmentVariable("EXWEBREQ","MACHINE"))" 
-        } else {
-            $null = [System.IO.Directory]::CreateDirectory([System.Environment]::GetEnvironmentVariable("EXWEBREQ","MACHINE"))
-            cd "$([System.Environment]::GetEnvironmentVariable("EXWEBREQ","MACHINE"))" 
-        if(
-            [System.IO.Directory]::GetFiles("C:\Windows\Microsoft.Net\assembly\GAC_MSIL","*$($AssemblyName).dll",[System.IO.SearchOption]::AllDirectories) -or `
-            "$([System.IO.Directory]::GetDirectories("$($PWD.Path)","*$($AssemblyName)*",[System.IO.SearchOption]::AllDirectories))"
-        ){
-            if([System.IO.Directory]::GetFiles("C:\Windows\Microsoft.Net\assembly\GAC_MSIL","*$($AssemblyName).dll",[System.IO.SearchOption]::AllDirectories)){
-                return "$([System.IO.Directory]::GetFiles("C:\Windows\Microsoft.Net\assembly\GAC_MSIL","*$($AssemblyName).dll",[System.IO.SearchOption]::AllDirectories))"
-            }
-            if("$([System.IO.Directory]::GetDirectories("$($PWD.Path)","*$($AssemblyName)*",[System.IO.SearchOption]::AllDirectories))"){
-                cd "$([System.IO.Directory]::GetDirectories("$($PWD.Path)","*$($AssemblyName)*",[System.IO.SearchOption]::AllDirectories))\lib"
-                cd "$([System.IO.Directory]::GetDirectories("$($PWD.Path)","net??",[System.IO.SearchOption]::AllDirectories) | sort | select -Last 1)"
-                $DLL = "$([System.io.Directory]::GetFiles("$($PWD.Path)","*.dll"))"
-                cd "$($SDIR)"
-                return $DLL
-            }
-        } else {
-            if(![system.io.file]::Exists("C:\ProgramData\chocolatey\bin\choco.exe")){
-                $p = [system.Diagnostics.Process]@{
-                    StartInfo=[System.Diagnostics.ProcessStartInfo]@{
-                        FileName="$($PSHOME)\PowerShell.exe";
-                        Arguments=" -noprofile -nologo -ep remotesigned -c iex (irm 'https://chocolatey.org/install.ps1')";
-                        Verb="RunAs";
-                    }
-                }
-                $null = $p.Start()
-                $p.WaitForExit()
-                while(![system.io.file]::Exists("C:\ProgramData\chocolatey\bin\choco.exe")){ sleep -m 100 }
-            }
-            if(![System.IO.File]::Exists("C:\ProgramData\chocolatey\lib\NuGet.CommandLine\tools\nuget.exe")){
-                $p = [system.Diagnostics.Process]@{
-                    StartInfo=[System.Diagnostics.ProcessStartInfo]@{
-                        FileName="C:\ProgramData\chocolatey\bin\choco.exe";
-                        Arguments=" install NuGet.CommandLine -y";
-                        Verb="RunAs";
-                    }
-                }
-                $null = $p.Start()
-                $p.WaitForExit()
-                while(![System.IO.File]::Exists("C:\ProgramData\chocolatey\lib\NuGet.CommandLine\tools\nuget.exe")){ sleep -m 100 }
-            }
-            . C:\ProgramData\Chocolatey\lib\NuGet.CommandLine\tools\nuget.exe install $($AssemblyName) -DependencyVersion ignore -OutputDirectory "$($PWD.Path)\Assemblies"
+Function Load-MissingAssembly
+{
+    [cmdletbinding()]
+    Param(
+        [string]$AssemblyName
+    )
+    $SDIR = "$($PWD.Path)"
+    if([System.IO.Directory]::Exists([System.Environment]::GetEnvironmentVariable("EXWEBREQ","MACHINE"))){ 
+        cd "$([System.Environment]::GetEnvironmentVariable("EXWEBREQ","MACHINE"))" 
+    } else {
+        $null = [System.IO.Directory]::CreateDirectory([System.Environment]::GetEnvironmentVariable("EXWEBREQ","MACHINE"))
+        cd "$([System.Environment]::GetEnvironmentVariable("EXWEBREQ","MACHINE"))" 
+    if(
+        [System.IO.Directory]::GetFiles("C:\Windows\Microsoft.Net\assembly\GAC_MSIL","*$($AssemblyName).dll",[System.IO.SearchOption]::AllDirectories) -or `
+        "$([System.IO.Directory]::GetDirectories("$($PWD.Path)","*$($AssemblyName)*",[System.IO.SearchOption]::AllDirectories))"
+    ){
+        if([System.IO.Directory]::GetFiles("C:\Windows\Microsoft.Net\assembly\GAC_MSIL","*$($AssemblyName).dll",[System.IO.SearchOption]::AllDirectories)){
+            return "$([System.IO.Directory]::GetFiles("C:\Windows\Microsoft.Net\assembly\GAC_MSIL","*$($AssemblyName).dll",[System.IO.SearchOption]::AllDirectories))"
+        }
+        if("$([System.IO.Directory]::GetDirectories("$($PWD.Path)","*$($AssemblyName)*",[System.IO.SearchOption]::AllDirectories))"){
             cd "$([System.IO.Directory]::GetDirectories("$($PWD.Path)","*$($AssemblyName)*",[System.IO.SearchOption]::AllDirectories))\lib"
             cd "$([System.IO.Directory]::GetDirectories("$($PWD.Path)","net??",[System.IO.SearchOption]::AllDirectories) | sort | select -Last 1)"
-            $TDIR = "$($PWD.Path)"
-            cd $SDIR
-            return "$([System.io.Directory]::GetFiles("$($TDIR)","*.dll"))"
+            $DLL = "$([System.io.Directory]::GetFiles("$($PWD.Path)","*.dll"))"
+            cd "$($SDIR)"
+            return $DLL
         }
-    }
-    $CR = [System.Text.RegularExpressions.Regex]::New("$([char]13)")
-    $LF = [System.Text.RegularExpressions.Regex]::New("$([char]10)")
-    if(![System.IO.Directory]::Exists([System.IO.FileInfo]::New($PROFILE).Directory.FullName)){
-        $null = [System.IO.Directory]::CreateDirectory([System.IO.FileInfo]::New($PROFILE).Directory.FullName)
-    }
-    if(![System.IO.File]::Exists($PROFILE)){
-        "" | Out-File $PROFILE -Encoding Ascii
-    }
-    if(!("System.Net.Http.HttpClient" -as [type])){
-        $DLL = Load-MissingAssembly -AssemblyName "System.Net.Http"
-        if($DLL){
-            if($DLL.GetType() -eq [object[]]){ $DLL = $DLL[-1] }
-            Add-Type -Path $DLL
-            if($? -and [array]::IndexOf(@([System.IO.File]::ReadAllLines($PROFILE)),"Add-Type -Path `"$($DLL)`"") -eq -1){ "`nAdd-Type -Path `"$($DLL)`"" | Out-File $PROFILE -Encoding Ascii -Append }
-            remove-Variable DLL -ea 0
+    } else {
+        if(![system.io.file]::Exists("C:\ProgramData\chocolatey\bin\choco.exe")){
+            $p = [system.Diagnostics.Process]@{
+                StartInfo=[System.Diagnostics.ProcessStartInfo]@{
+                    FileName="$($PSHOME)\PowerShell.exe";
+                    Arguments=" -noprofile -nologo -ep remotesigned -c iex (irm 'https://chocolatey.org/install.ps1')";
+                    Verb="RunAs";
+                }
+            }
+            $null = $p.Start()
+            $p.WaitForExit()
+            while(![system.io.file]::Exists("C:\ProgramData\chocolatey\bin\choco.exe")){ sleep -m 100 }
         }
-    }
-    if(!("System.Security.Cryptography.ProtectedData" -as [type])){
-        $DLL = Load-MissingAssembly -AssemblyName "System.Security.Cryptography.ProtectedData"
-        if($DLL){
-            if($DLL.GetType() -eq [object[]]){ $DLL = $DLL[-1] }
-            Add-Type -Path $DLL
-            if($? -and [array]::IndexOf(@([System.IO.File]::ReadAllLines($PROFILE)),"Add-Type -Path `"$($DLL)`"") -eq -1){ "`nAdd-Type -Path `"$($DLL)`"" | Out-File $PROFILE -Encoding Ascii -Append }
-            remove-variable DLL -ea 0
+        if(![System.IO.File]::Exists("C:\ProgramData\chocolatey\lib\NuGet.CommandLine\tools\nuget.exe")){
+            $p = [system.Diagnostics.Process]@{
+                StartInfo=[System.Diagnostics.ProcessStartInfo]@{
+                    FileName="C:\ProgramData\chocolatey\bin\choco.exe";
+                    Arguments=" install NuGet.CommandLine -y";
+                    Verb="RunAs";
+                }
+            }
+            $null = $p.Start()
+            $p.WaitForExit()
+            while(![System.IO.File]::Exists("C:\ProgramData\chocolatey\lib\NuGet.CommandLine\tools\nuget.exe")){ sleep -m 100 }
         }
+        . C:\ProgramData\Chocolatey\lib\NuGet.CommandLine\tools\nuget.exe install $($AssemblyName) -DependencyVersion ignore -OutputDirectory "$($PWD.Path)\Assemblies"
+        cd "$([System.IO.Directory]::GetDirectories("$($PWD.Path)","*$($AssemblyName)*",[System.IO.SearchOption]::AllDirectories))\lib"
+        cd "$([System.IO.Directory]::GetDirectories("$($PWD.Path)","net??",[System.IO.SearchOption]::AllDirectories) | sort | select -Last 1)"
+        $TDIR = "$($PWD.Path)"
+        cd $SDIR
+        return "$([System.io.Directory]::GetFiles("$($TDIR)","*.dll"))"
+    }
+}
+$CR = [System.Text.RegularExpressions.Regex]::New("$([char]13)")
+$LF = [System.Text.RegularExpressions.Regex]::New("$([char]10)")
+if(![System.IO.Directory]::Exists([System.IO.FileInfo]::New($PROFILE).Directory.FullName)){
+    $null = [System.IO.Directory]::CreateDirectory([System.IO.FileInfo]::New($PROFILE).Directory.FullName)
+}
+if(![System.IO.File]::Exists($PROFILE)){
+    "" | Out-File $PROFILE -Encoding Ascii
+}
+if(!("System.Net.Http.HttpClient" -as [type])){
+    $DLL = Load-MissingAssembly -AssemblyName "System.Net.Http"
+    if($DLL){
+        if($DLL.GetType() -eq [object[]]){ $DLL = $DLL[-1] }
+        Add-Type -Path $DLL
+        if($? -and [array]::IndexOf(@([System.IO.File]::ReadAllLines($PROFILE)),"Add-Type -Path `"$($DLL)`"") -eq -1){ "`nAdd-Type -Path `"$($DLL)`"" | Out-File $PROFILE -Encoding Ascii -Append }
+        remove-Variable DLL -ea 0
+    }
+}
+if(!("System.Security.Cryptography.ProtectedData" -as [type])){
+    $DLL = Load-MissingAssembly -AssemblyName "System.Security.Cryptography.ProtectedData"
+    if($DLL){
+        if($DLL.GetType() -eq [object[]]){ $DLL = $DLL[-1] }
+        Add-Type -Path $DLL
+        if($? -and [array]::IndexOf(@([System.IO.File]::ReadAllLines($PROFILE)),"Add-Type -Path `"$($DLL)`"") -eq -1){ "`nAdd-Type -Path `"$($DLL)`"" | Out-File $PROFILE -Encoding Ascii -Append }
+        remove-variable DLL -ea 0
     }
 }
 
@@ -191,7 +187,12 @@ function Execute-WebRequest
             [string]$AssemblyName
         )
         $SDIR = "$($PWD.Path)"
-        if([System.Environment]::GetEnvironmentVariable("EXWEBREQ","MACHINE")){ cd "$([System.Environment]::GetEnvironmentVariable("EXWEBREQ","MACHINE"))" }
+        if([System.IO.Directory]::Exists([System.Environment]::GetEnvironmentVariable("EXWEBREQ","MACHINE"))){ 
+            cd "$([System.Environment]::GetEnvironmentVariable("EXWEBREQ","MACHINE"))" 
+        } else {
+            $null = [System.IO.Directory]::CreateDirectory([System.Environment]::GetEnvironmentVariable("EXWEBREQ","MACHINE"))
+            cd "$([System.Environment]::GetEnvironmentVariable("EXWEBREQ","MACHINE"))"
+        }
         if(
             [System.IO.Directory]::GetFiles("C:\Windows\Microsoft.Net\assembly\GAC_MSIL","*$($AssemblyName).dll",[System.IO.SearchOption]::AllDirectories) -or `
             "$([System.IO.Directory]::GetDirectories("$($PWD.Path)","*$($AssemblyName)*",[System.IO.SearchOption]::AllDirectories))"
