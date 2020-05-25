@@ -172,7 +172,8 @@ function Execute-WebRequest
         [string]$CONTENT_TYPE,
         [string]$REFERER,
         [switch]$NO_COOKIE,
-        [switch]$GET_REDIRECT_URI
+        [switch]$GET_REDIRECT_URI,
+        [switch]$SILENT
     )
     Function Load-MissingAssembly
     {
@@ -282,9 +283,11 @@ function Execute-WebRequest
             )
         )
     }
-    Write-Host "HTTP $($METHOD): " -ForegroundColor Yellow -NoNewline
-    Write-Host "$($URI.Split('/')[2]) :: " -ForegroundColor Green -NoNewline
-    Write-Host "/$($URI.Split('/')[3..($URI.Split('/').length)] -join '/') HTTP/1.1" -ForegroundColor Green
+    if(!$SILENT){
+        Write-Host "HTTP $($METHOD): " -ForegroundColor Yellow -NoNewline
+        Write-Host "$($URI.Split('/')[2]) :: " -ForegroundColor Green -NoNewline
+        Write-Host "$([Uri]::New($URI).PathAndQuery) HTTP/1.1" -ForegroundColor Green
+    }
     $HANDLE = [System.Net.Http.HttpClientHandler]::new()
     $HANDLE.AutomaticDecompression = [System.Net.DecompressionMethods]::GZip,[System.Net.DecompressionMethods]::Deflate
     $HANDLE.SslProtocols = (
@@ -357,7 +360,7 @@ function Execute-WebRequest
     if($CLIENT.DefaultRequestHeaders.Contains("Path")){
         $null = $CLIENT.DefaultRequestHeaders.Remove("Path")
     }
-    $null = $CLIENT.DefaultRequestHeaders.Add("Path","/$($URI.Split('/')[3..($URI.Split('/').length)] -join '/')")
+    $null = $CLIENT.DefaultRequestHeaders.Add("Path","$([Uri]::New($URI).PathAndQuery)")
     if($REFERER){
         if($CLIENT.DefaultRequestHeaders.Contains("Referer")){
             $null = $CLIENT.DefaultRequestHeaders.Remove("Referer")
