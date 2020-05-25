@@ -37,8 +37,11 @@ Function Install-Ewr
     if ([System.IO.File]::Exists("C:\Windows\Microsoft.Net\assembly\GAC_MSIL\Microsoft.VisualBasic\v4.0_10.0.0.0__b03f5f7f11d50a3a\Microsoft.VisualBasic.dll")) {
         add-type -path "C:\Windows\Microsoft.Net\assembly\GAC_MSIL\Microsoft.VisualBasic\v4.0_10.0.0.0__b03f5f7f11d50a3a\Microsoft.VisualBasic.dll"
     }
-    if(![System.IO.Directory]::Exists("C:\TEMP\BIN\Execute-WebRequest")){ $null = [System.IO.Directory]::CreateDirectory("C:\TEMP\BIN\Execute-WebRequest") }
-    $EXWEBREQ = "C:\TEMP\BIN\Execute-WebRequest"
+    if([System.IO.DirectoryInfo]::New("$($PWD.Path)").Name -eq 'Execute-WebRequest'){ 
+        $EXWEBREQ = "$($PWD.Path)"
+    } else {
+        $EXWEBREQ = "C:\TEMP\BIN\Execute-WebRequest"
+    }    
     if (![System.Environment]::GetEnvironmentVariable("EXWEBREQ", "MACHINE")) {
         Switch (
             [microsoft.visualbasic.Interaction]::MsgBox(
@@ -48,6 +51,7 @@ Function Install-Ewr
             )
         ) {
             "Yes" {
+                if(![System.IO.Directory]::Exists($EXWEBREQ)){ $null = [System.IO.Directory]::CreateDirectory($EXWEBREQ) }
                 While (![System.Environment]::GetEnvironmentVariable("EXWEBREQ", "MACHINE")) {
                     SetEnvVarFolder -FOLDER $EXWEBREQ -VARIABLE_NAME 'EXWEBREQ'
                     sleep -s 1
