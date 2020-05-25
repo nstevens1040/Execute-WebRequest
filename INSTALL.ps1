@@ -434,7 +434,11 @@ function Execute-WebRequest
     }
     if($HTMLSTRING){
         $DOMOBJ = [System.Activator]::CreateInstance([type]::getTypeFromCLSID([guid]::Parse("{25336920-03F9-11cf-8FD0-00AA00686F13}")))
-        $DOMOBJ.IHTMLDocument2_write([System.Text.Encoding]::Unicode.GetBytes($HTMLSTRING))
+        if('IHTMLDocument2_write' -in @($DOMOBJ | gm -MemberType Method | % Name)){
+            $DOMOBJ.IHTMLDocument2_write([System.Text.Encoding]::Unicode.GetBytes($HTMLSTRING))
+        } else {
+            $DOMOBJ.Write([System.Text.Encoding]::Unicode.GetBytes($HTMLSTRING))
+        }
     }
     if($GET_REDIRECT_URI){
         $OBJ | Add-Member -MemberType NoteProperty -Name RedirectUri -Value $REDIRECT
