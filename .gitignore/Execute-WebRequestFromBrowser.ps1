@@ -15,7 +15,8 @@
         [string]$REFERER,
         [switch]$NO_COOKIE,
         [switch]$GET_REDIRECT_URI,
-        [switch]$SILENT
+        [switch]$SILENT,
+        [bool]$NO_USER_AGENT
     )
     Function Install-Ewr
     {
@@ -210,7 +211,7 @@
     if($CSRF){
         $null = $CLIENT.DefaultRequestHeaders.Add("x-csrf-token","$($CSRF)")
     }
-    if(!$CLIENT.DefaultRequestHeaders.Contains("User-Agent")){
+    if(!$CLIENT.DefaultRequestHeaders.Contains("User-Agent") -and !$NO_USER_AGENT){
         $CLIENT.DefaultRequestHeaders.Add("User-Agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36")
     }
     if($HEADERS){
